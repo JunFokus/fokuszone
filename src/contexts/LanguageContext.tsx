@@ -73,9 +73,9 @@ const translations = {
     physicsSubject: 'Physics',
     chemistrySubject: 'Chemistry',
     biologySubject: 'Biology',
-    welcomeMessage: "Hi! I'm EduBot 🤖 Your AI study companion for Malaysian curriculum. Ask me anything!",
+    welcomeMessage: "Hi! I'm FokusZone 🤖 Your AI study companion for Malaysian curriculum. Ask me anything!",
     heroTitle: 'Your AI Study Buddy 🎓',
-    heroSubtitle: 'Learn smarter with EduBot — your personal tutor for Malaysian Forms 1–5',
+    heroSubtitle: 'Learn smarter with FokusZone — your personal tutor for Malaysian Forms 1–5',
   },
   ms: {
     welcome: 'Selamat kembali',
