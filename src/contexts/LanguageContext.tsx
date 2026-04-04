@@ -6,7 +6,7 @@ const translations = {
   en: {
     welcome: 'Welcome back',
     dashboard: 'Dashboard',
-    chat: 'Chat with EduBot',
+    chat: 'Chat with FokusZone',
     quiz: 'Take a Quiz',
     history: 'Quiz History',
     logout: 'Log Out',
