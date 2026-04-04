@@ -80,7 +80,7 @@ const translations = {
   ms: {
     welcome: 'Selamat kembali',
     dashboard: 'Papan Pemuka',
-    chat: 'Berbual dengan EduBot',
+    chat: 'Berbual dengan FokusZone',
     quiz: 'Ambil Kuiz',
     history: 'Sejarah Kuiz',
     logout: 'Log Keluar',
