@@ -21,9 +21,9 @@ const ThemeToggle = () => {
 
   useEffect(() => {
     const saved = localStorage.getItem('theme');
-    if (saved === 'dark') {
-      setDark(true);
-    } else if (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    if (saved === 'light') {
+      setDark(false);
+    } else {
       setDark(true);
     }
   }, []);
