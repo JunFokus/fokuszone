@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Trophy, Calendar } from 'lucide-react';
+import { Trophy, Calendar, Brain } from 'lucide-react';
 
 const QuizHistory = () => {
   const { user } = useAuth();
@@ -21,45 +20,48 @@ const QuizHistory = () => {
   }, [user]);
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-2xl">
-      <h1 className="text-3xl font-extrabold mb-6">📊 {t('history')}</h1>
+    <div className="container mx-auto px-4 py-8 max-w-2xl pb-20 md:pb-8">
+      <div className="flex items-center gap-3 mb-8">
+        <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+          <Trophy className="h-5 w-5 text-primary" />
+        </div>
+        <h1 className="text-2xl font-bold tracking-tight">{t('history')}</h1>
+      </div>
 
       {quizzes.length === 0 ? (
-        <Card className="text-center py-12">
-          <CardContent>
-            <p className="text-4xl mb-4">📝</p>
-            <p className="text-muted-foreground">{t('noQuizzes')}</p>
-          </CardContent>
-        </Card>
+        <div className="glass rounded-2xl p-12 text-center">
+          <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <Brain className="h-7 w-7 text-primary" />
+          </div>
+          <p className="text-muted-foreground text-sm">{t('noQuizzes')}</p>
+        </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {quizzes.map((quiz) => (
-            <Card key={quiz.id} className="border-2 border-border hover:border-primary/30 transition-colors">
-              <CardContent className="flex items-center justify-between py-4">
-                <div className="space-y-1">
-                  <p className="font-bold text-foreground text-lg">{quiz.subject}</p>
-                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                    <span>{language === 'en' ? `Form ${quiz.form_level}` : `Tingkatan ${quiz.form_level}`}</span>
-                    <span>•</span>
-                    <span className="capitalize">{quiz.difficulty}</span>
-                    <span>•</span>
-                    <span>{quiz.total_questions} {language === 'en' ? 'questions' : 'soalan'}</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Calendar className="h-3 w-3" />
-                    {new Date(quiz.created_at).toLocaleDateString(language === 'en' ? 'en-MY' : 'ms-MY')}
-                  </div>
+            <div key={quiz.id} className="glass rounded-xl p-4 flex items-center justify-between glass-hover">
+              <div className="space-y-1">
+                <p className="font-semibold text-sm">{quiz.subject}</p>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span>{language === 'en' ? `Form ${quiz.form_level}` : `Tingkatan ${quiz.form_level}`}</span>
+                  <span>·</span>
+                  <span className="capitalize">{quiz.difficulty}</span>
+                  <span>·</span>
+                  <span>{quiz.total_questions} {language === 'en' ? 'questions' : 'soalan'}</span>
                 </div>
-                <div className="text-right">
-                  <div className={`text-3xl font-extrabold ${Number(quiz.score_percentage) >= 70 ? 'text-accent' : 'text-secondary'}`}>
-                    {quiz.score_percentage}%
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {quiz.correct_answers}/{quiz.total_questions} {t('correct')}
-                  </p>
+                <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                  <Calendar className="h-3 w-3" />
+                  {new Date(quiz.created_at).toLocaleDateString(language === 'en' ? 'en-MY' : 'ms-MY')}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+              <div className="text-right">
+                <div className={`text-2xl font-bold ${Number(quiz.score_percentage) >= 70 ? 'text-success' : 'text-destructive'}`}>
+                  {quiz.score_percentage}%
+                </div>
+                <p className="text-[10px] text-muted-foreground">
+                  {quiz.correct_answers}/{quiz.total_questions} {t('correct')}
+                </p>
+              </div>
+            </div>
           ))}
         </div>
       )}
