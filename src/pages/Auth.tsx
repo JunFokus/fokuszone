@@ -41,7 +41,7 @@ const Auth = () => {
         await signUp(email, password, name, parseInt(formLevel));
         toast({
           title: language === 'en' ? 'Account created!' : 'Akaun dicipta!',
-          description: language === 'en' ? 'Welcome to EduBot! 🎉' : 'Selamat datang ke EduBot! 🎉',
+          description: language === 'en' ? 'Welcome to FokusZone! 🎉' : 'Selamat datang ke FokusZone! 🎉',
         });
       }
     } catch (err: any) {
