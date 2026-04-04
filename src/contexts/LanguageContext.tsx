@@ -121,7 +121,7 @@ const translations = {
     noChats: 'Tiada perbualan lagi. Mulakan perbualan!',
     noQuizzes: 'Tiada kuiz lagi. Ambil kuiz pertama anda!',
     generating: 'Menjana...',
-    thinking: 'EduBot sedang berfikir...',
+    thinking: 'FokusZone sedang berfikir...',
     congratulations: 'Tahniah! 🎉',
     keepTrying: 'Teruskan usaha! 💪',
     newChat: 'Perbualan Baru',
