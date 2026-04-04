@@ -6,11 +6,13 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import NavBar from "@/components/NavBar";
+import Landing from "./pages/Landing";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Chat from "./pages/Chat";
 import Quiz from "./pages/Quiz";
 import QuizHistory from "./pages/QuizHistory";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -19,7 +21,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-bounce text-4xl">📚</div>
+      <div className="animate-pulse text-4xl text-primary">●</div>
     </div>
   );
   if (!user) return <Navigate to="/auth" replace />;
@@ -29,6 +31,22 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
       {children}
     </>
   );
+};
+
+const HomeRoute = () => {
+  const { user, loading } = useAuth();
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="animate-pulse text-4xl text-primary">●</div>
+    </div>
+  );
+  if (user) return (
+    <>
+      <NavBar />
+      <Index />
+    </>
+  );
+  return <Landing />;
 };
 
 const App = () => (
@@ -41,10 +59,11 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               <Route path="/auth" element={<Auth />} />
-              <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+              <Route path="/" element={<HomeRoute />} />
               <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
               <Route path="/quiz" element={<ProtectedRoute><Quiz /></ProtectedRoute>} />
               <Route path="/history" element={<ProtectedRoute><QuizHistory /></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import ThemeToggle from '@/components/ThemeToggle';
 import { User, Palette, BookOpen, Shield, BarChart3, Save } from 'lucide-react';
 
@@ -19,6 +20,19 @@ const Settings = () => {
   const [displayName, setDisplayName] = useState(profile?.display_name || '');
   const [formLevel, setFormLevel] = useState(String(profile?.form_level || 1));
   const [saving, setSaving] = useState(false);
+  const [chatCount, setChatCount] = useState(0);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('chat_messages')
+      .select('conversation_id')
+      .eq('user_id', user.id)
+      .then(({ data }) => {
+        const unique = new Set(data?.map(d => d.conversation_id));
+        setChatCount(unique.size);
+      });
+  }, [user]);
 
   const tabs: { id: Tab; icon: typeof User; label: string }[] = [
     { id: 'account', icon: User, label: language === 'en' ? 'Account' : 'Akaun' },
@@ -174,7 +188,7 @@ const Settings = () => {
               <h2 className="text-lg font-semibold">{language === 'en' ? 'Progress Data' : 'Data Kemajuan'}</h2>
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-4 rounded-xl bg-muted/50 text-center">
-                  <p className="text-2xl font-bold text-primary">{chatCount || 0}</p>
+                  <p className="text-2xl font-bold text-primary">{chatCount}</p>
                   <p className="text-xs text-muted-foreground">{language === 'en' ? 'Total Chats' : 'Jumlah Perbualan'}</p>
                 </div>
                 <div className="p-4 rounded-xl bg-muted/50 text-center">
@@ -188,11 +202,6 @@ const Settings = () => {
       </div>
     </div>
   );
-};
-
-// Need chatCount in progress tab - quick local state
-const SettingsWrapper = () => {
-  return <Settings />;
 };
 
 export default Settings;
