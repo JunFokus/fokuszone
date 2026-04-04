@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -37,96 +36,71 @@ const Index = () => {
   const formLabel = language === 'en' ? `Form ${profile?.form_level || 1}` : `Tingkatan ${profile?.form_level || 1}`;
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
-      {/* Welcome Section */}
-      <div className="text-center space-y-2 animate-slide-up">
-        <h1 className="text-4xl font-extrabold">
-          {t('welcome')}, <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">{displayName}</span>! 👋
+    <div className="container mx-auto px-4 py-6 space-y-6 max-w-3xl">
+      <div className="space-y-1 animate-slide-up">
+        <h1 className="text-2xl font-extrabold">
+          {t('welcome')}, {displayName} 👋
         </h1>
-        <p className="text-muted-foreground text-lg">{formLabel} • {t('heroSubtitle')}</p>
+        <p className="text-muted-foreground text-sm">{formLabel}</p>
       </div>
 
-      {/* Quick Access Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-2 gap-3">
         <Link to="/chat">
-          <Card className="group hover:shadow-xl transition-all duration-300 border-2 border-primary/20 hover:border-primary/50 cursor-pointer h-full">
-            <CardContent className="flex items-center gap-6 p-8">
-              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">
-                💬
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-foreground">{t('chat')}</h2>
-                <p className="text-muted-foreground text-sm">
-                  {language === 'en' ? 'Ask questions, get explanations, learn anything!' : 'Tanya soalan, dapat penerangan, belajar apa sahaja!'}
-                </p>
-              </div>
+          <Card className="group hover:border-primary/50 transition-colors cursor-pointer h-full">
+            <CardContent className="flex flex-col items-center gap-2 p-5 text-center">
+              <MessageCircle className="h-8 w-8 text-primary group-hover:scale-110 transition-transform" />
+              <h2 className="font-bold text-sm">{t('chat')}</h2>
+              <p className="text-muted-foreground text-xs leading-tight">
+                {language === 'en' ? 'Ask questions & learn' : 'Tanya soalan & belajar'}
+              </p>
             </CardContent>
           </Card>
         </Link>
-
         <Link to="/quiz">
-          <Card className="group hover:shadow-xl transition-all duration-300 border-2 border-secondary/20 hover:border-secondary/50 cursor-pointer h-full">
-            <CardContent className="flex items-center gap-6 p-8">
-              <div className="w-16 h-16 rounded-2xl bg-secondary/10 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">
-                🧠
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-foreground">{t('quiz')}</h2>
-                <p className="text-muted-foreground text-sm">
-                  {language === 'en' ? 'Generate quizzes on any subject and test yourself!' : 'Jana kuiz untuk mana-mana subjek dan uji diri anda!'}
-                </p>
-              </div>
+          <Card className="group hover:border-accent/50 transition-colors cursor-pointer h-full">
+            <CardContent className="flex flex-col items-center gap-2 p-5 text-center">
+              <Brain className="h-8 w-8 text-accent group-hover:scale-110 transition-transform" />
+              <h2 className="font-bold text-sm">{t('quiz')}</h2>
+              <p className="text-muted-foreground text-xs leading-tight">
+                {language === 'en' ? 'Test your knowledge' : 'Uji pengetahuan anda'}
+              </p>
             </CardContent>
           </Card>
         </Link>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="text-center p-4">
-          <MessageCircle className="h-6 w-6 mx-auto text-primary mb-1" />
-          <p className="text-2xl font-bold text-foreground">{chatCount}</p>
-          <p className="text-xs text-muted-foreground">{language === 'en' ? 'Conversations' : 'Perbualan'}</p>
-        </Card>
-        <Card className="text-center p-4">
-          <Brain className="h-6 w-6 mx-auto text-secondary mb-1" />
-          <p className="text-2xl font-bold text-foreground">{recentQuizzes.length}</p>
-          <p className="text-xs text-muted-foreground">{language === 'en' ? 'Quizzes Taken' : 'Kuiz Diambil'}</p>
-        </Card>
-        <Card className="text-center p-4">
-          <Trophy className="h-6 w-6 mx-auto text-accent mb-1" />
-          <p className="text-2xl font-bold text-foreground">
-            {recentQuizzes.length > 0
-              ? Math.round(recentQuizzes.reduce((s, q) => s + Number(q.score_percentage), 0) / recentQuizzes.length)
-              : 0}%
-          </p>
-          <p className="text-xs text-muted-foreground">{language === 'en' ? 'Avg Score' : 'Purata Markah'}</p>
-        </Card>
-        <Card className="text-center p-4">
-          <TrendingUp className="h-6 w-6 mx-auto text-purple mb-1" />
-          <p className="text-2xl font-bold text-foreground">{formLabel}</p>
-          <p className="text-xs text-muted-foreground">{language === 'en' ? 'Level' : 'Tahap'}</p>
-        </Card>
+      <div className="grid grid-cols-4 gap-2">
+        {[
+          { icon: MessageCircle, value: chatCount, label: language === 'en' ? 'Chats' : 'Perbualan', color: 'text-primary' },
+          { icon: Brain, value: recentQuizzes.length, label: language === 'en' ? 'Quizzes' : 'Kuiz', color: 'text-accent' },
+          { icon: Trophy, value: recentQuizzes.length > 0 ? `${Math.round(recentQuizzes.reduce((s, q) => s + Number(q.score_percentage), 0) / recentQuizzes.length)}%` : '0%', label: language === 'en' ? 'Avg' : 'Purata', color: 'text-primary' },
+          { icon: TrendingUp, value: formLabel, label: language === 'en' ? 'Level' : 'Tahap', color: 'text-accent' },
+        ].map(({ icon: Icon, value, label, color }, i) => (
+          <Card key={i} className="text-center p-3">
+            <Icon className={`h-4 w-4 mx-auto ${color} mb-1`} />
+            <p className="text-sm font-bold">{value}</p>
+            <p className="text-[10px] text-muted-foreground">{label}</p>
+          </Card>
+        ))}
       </div>
 
-      {/* Recent Quizzes */}
       {recentQuizzes.length > 0 && (
         <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">{t('recentQuizzes')} 📊</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-bold">{t('recentQuizzes')}</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-2">
             {recentQuizzes.map((quiz) => (
-              <div key={quiz.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+              <div key={quiz.id} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50">
                 <div>
-                  <p className="font-semibold text-foreground">{quiz.subject}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {language === 'en' ? `Form ${quiz.form_level}` : `Tingkatan ${quiz.form_level}`} • {quiz.difficulty}
+                  <p className="font-semibold text-sm">{quiz.subject}</p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {language === 'en' ? `Form ${quiz.form_level}` : `Tingkatan ${quiz.form_level}`} · {quiz.difficulty}
                   </p>
                 </div>
-                <div className={`text-lg font-bold ${Number(quiz.score_percentage) >= 70 ? 'text-accent' : 'text-secondary'}`}>
+                <span className={`text-sm font-bold ${Number(quiz.score_percentage) >= 70 ? 'text-primary' : 'text-destructive'}`}>
                   {quiz.score_percentage}%
-                </div>
+                </span>
               </div>
             ))}
           </CardContent>
