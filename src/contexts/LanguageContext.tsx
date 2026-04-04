@@ -47,7 +47,7 @@ const translations = {
     noChats: 'No chats yet. Start a conversation!',
     noQuizzes: 'No quizzes yet. Take your first quiz!',
     generating: 'Generating...',
-    thinking: 'EduBot is thinking...',
+    thinking: 'FokusZone is thinking...',
     congratulations: 'Congratulations! 🎉',
     keepTrying: 'Keep trying! 💪',
     newChat: 'New Chat',
