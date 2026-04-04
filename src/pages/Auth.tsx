@@ -41,7 +41,7 @@ const Auth = () => {
         await signUp(email, password, name, parseInt(formLevel));
         toast({
           title: language === 'en' ? 'Account created!' : 'Akaun dicipta!',
-          description: language === 'en' ? 'Welcome to EduBot! 🎉' : 'Selamat datang ke EduBot! 🎉',
+          description: language === 'en' ? 'Welcome to FokusZone! 🎉' : 'Selamat datang ke FokusZone! 🎉',
         });
       }
     } catch (err: any) {
@@ -75,7 +75,7 @@ const Auth = () => {
             <span>📚</span>
           </div>
           <CardTitle className="text-3xl font-extrabold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            EduBot Malaysia
+            FokusZone
           </CardTitle>
           <p className="text-muted-foreground text-sm">
             {t('heroSubtitle')}
