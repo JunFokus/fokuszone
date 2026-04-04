@@ -24,7 +24,7 @@ const NavBar = () => {
         <Link to="/" className="flex items-center gap-2">
           <span className="text-2xl">🤖</span>
           <span className="font-extrabold text-xl bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent hidden sm:inline">
-            EduBot
+            FokusZone
           </span>
         </Link>
 
