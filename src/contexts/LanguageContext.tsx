@@ -147,9 +147,9 @@ const translations = {
     physicsSubject: 'Fizik',
     chemistrySubject: 'Kimia',
     biologySubject: 'Biologi',
-    welcomeMessage: "Hai! Saya EduBot 🤖 Teman belajar AI anda untuk kurikulum Malaysia. Tanya saya apa sahaja!",
+    welcomeMessage: "Hai! Saya FokusZone 🤖 Teman belajar AI anda untuk kurikulum Malaysia. Tanya saya apa sahaja!",
     heroTitle: 'Teman Belajar AI Anda 🎓',
-    heroSubtitle: 'Belajar dengan lebih bijak bersama EduBot — tutor peribadi anda untuk Tingkatan 1–5',
+    heroSubtitle: 'Belajar dengan lebih bijak bersama FokusZone — tutor peribadi anda untuk Tingkatan 1–5',
   },
 };
 
