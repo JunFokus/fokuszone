@@ -27,9 +27,9 @@ const NavBar = () => {
     <>
       {/* Desktop Nav */}
       <nav className="sticky top-0 z-50 glass border-b border-border/50">
-        <div className="container mx-auto px-4 flex items-center justify-between h-14">
-          <Link to="/" className="flex items-center gap-2">
-            <img src={logo} alt="FokusZone" className="h-7 w-7 rounded-md" />
+        <div className="container mx-auto px-4 sm:px-6 flex items-center justify-between h-14">
+          <Link to="/" className="flex items-center gap-2 shrink-0 transition-opacity hover:opacity-80">
+            <img src={logo} alt="FokusZone" className="h-8 w-8 rounded-md" />
             <span className="font-bold text-base tracking-tight hidden sm:inline">FokusZone</span>
           </Link>
 
@@ -40,11 +40,11 @@ const NavBar = () => {
                 <Button
                   variant={isActive(path) ? 'default' : 'ghost'}
                   size="sm"
-                  className={`rounded-full gap-1.5 h-8 text-xs font-medium ${
+                  className={`rounded-full gap-1.5 h-9 text-sm font-medium ${
                     isActive(path) ? '' : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  <Icon className="h-3.5 w-3.5" />
+                  <Icon className="h-4 w-4" />
                   {label}
                 </Button>
               </Link>
@@ -57,22 +57,22 @@ const NavBar = () => {
               variant="ghost"
               size="sm"
               onClick={() => setLanguage(language === 'en' ? 'ms' : 'en')}
-              className="rounded-full text-xs h-8 px-2.5"
+              className="rounded-full text-xs h-9 px-3"
             >
               {language === 'en' ? 'BM' : 'EN'}
             </Button>
             {profile && (
               <div className="hidden sm:flex items-center gap-2 px-2">
-                <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
-                  <span className="text-[10px] font-bold text-primary">
+                <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center">
+                  <span className="text-xs font-bold text-primary">
                     {profile.display_name?.charAt(0)?.toUpperCase() || '?'}
                   </span>
                 </div>
-                <span className="text-xs text-muted-foreground font-medium">{profile.display_name}</span>
+                <span className="text-sm text-muted-foreground font-medium max-w-[100px] truncate">{profile.display_name}</span>
               </div>
             )}
-            <Button variant="ghost" size="icon" onClick={signOut} className="rounded-full h-8 w-8 text-muted-foreground hover:text-foreground">
-              <LogOut className="h-3.5 w-3.5" />
+            <Button variant="ghost" size="icon" onClick={signOut} className="rounded-full h-9 w-9 text-muted-foreground hover:text-foreground">
+              <LogOut className="h-4 w-4" />
             </Button>
 
             {/* Mobile Hamburger */}
@@ -80,9 +80,9 @@ const NavBar = () => {
               variant="ghost"
               size="icon"
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="md:hidden rounded-full h-8 w-8"
+              className="md:hidden rounded-full h-9 w-9"
             >
-              {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+              {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
           </div>
         </div>
@@ -94,9 +94,9 @@ const NavBar = () => {
               <Link key={path} to={path} onClick={() => setMobileOpen(false)}>
                 <Button
                   variant={isActive(path) ? 'default' : 'ghost'}
-                  className="w-full justify-start gap-3 rounded-xl h-10 font-medium"
+                  className="w-full justify-start gap-3 rounded-xl h-12 font-medium text-base"
                 >
-                  <Icon className="h-4 w-4" />
+                  <Icon className="h-5 w-5" />
                   {label}
                 </Button>
               </Link>
@@ -107,17 +107,17 @@ const NavBar = () => {
 
       {/* Mobile Bottom Tab Bar */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 glass border-t border-border/50 safe-area-bottom">
-        <div className="flex items-center justify-around h-14">
+        <div className="flex items-center justify-around h-16">
           {links.slice(0, 4).map(({ path, icon: Icon, label }) => (
             <Link
               key={path}
               to={path}
-              className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg transition-colors ${
+              className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors min-w-[64px] ${
                 isActive(path) ? 'text-primary' : 'text-muted-foreground'
               }`}
             >
-              <Icon className="h-5 w-5" />
-              <span className="text-[10px] font-medium">{label}</span>
+              <Icon className="h-6 w-6" />
+              <span className="text-[11px] font-medium leading-none">{label}</span>
             </Link>
           ))}
         </div>

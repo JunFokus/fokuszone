@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 
 const ThemeToggle = () => {
   const [dark, setDark] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return document.documentElement.classList.contains('dark');
+    if (typeof window === 'undefined') return true;
+    return localStorage.getItem('theme') !== 'light';
   });
 
   useEffect(() => {
@@ -19,21 +19,12 @@ const ThemeToggle = () => {
     }
   }, [dark]);
 
-  useEffect(() => {
-    const saved = localStorage.getItem('theme');
-    if (saved === 'light') {
-      setDark(false);
-    } else {
-      setDark(true);
-    }
-  }, []);
-
   return (
     <Button
       variant="ghost"
       size="icon"
       onClick={() => setDark(!dark)}
-      className="rounded-full h-8 w-8"
+      className="rounded-full h-9 w-9"
       aria-label="Toggle theme"
     >
       {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
