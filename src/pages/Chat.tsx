@@ -2,10 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Send, Plus, Loader2, Search, MessageCircle, Trash2, ChevronDown, Sparkles } from 'lucide-react';
+import { Send, Plus, Loader2, Search, MessageCircle, Trash2, Sparkles, PanelLeftOpen } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 interface Message {
@@ -39,6 +40,76 @@ const SUGGESTED_PROMPTS_MS = [
   'Soalan peperiksaan percubaan Biologi',
 ];
 
+const ChatSidebarContent = ({
+  conversations,
+  conversationId,
+  searchQuery,
+  setSearchQuery,
+  setConversationId,
+  handleNewChat,
+  handleDeleteConversation,
+  language,
+  onSelect,
+}: {
+  conversations: Conversation[];
+  conversationId: string;
+  searchQuery: string;
+  setSearchQuery: (q: string) => void;
+  setConversationId: (id: string) => void;
+  handleNewChat: () => void;
+  handleDeleteConversation: (id: string) => void;
+  language: string;
+  onSelect?: () => void;
+}) => {
+  const filtered = conversations.filter(c =>
+    c.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  return (
+    <div className="flex flex-col h-full p-3 space-y-3">
+      <Button onClick={() => { handleNewChat(); onSelect?.(); }} className="w-full rounded-xl h-11 font-medium gap-2 glow-border">
+        <Plus className="h-4 w-4" />
+        {language === 'en' ? 'New Chat' : 'Perbualan Baru'}
+      </Button>
+
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          placeholder={language === 'en' ? 'Search chats...' : 'Cari perbualan...'}
+          className="pl-10 h-10 rounded-xl bg-muted/50 text-sm"
+        />
+      </div>
+
+      <ScrollArea className="flex-1">
+        <div className="space-y-1">
+          {filtered.map(conv => (
+            <div
+              key={conv.id}
+              className={`group flex items-center gap-2 px-3 py-3 rounded-xl cursor-pointer transition-colors ${
+                conv.id === conversationId
+                  ? 'bg-primary/10 text-foreground'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+              }`}
+              onClick={() => { setConversationId(conv.id); onSelect?.(); }}
+            >
+              <MessageCircle className="h-4 w-4 shrink-0" />
+              <span className="truncate flex-1 text-sm font-medium">{conv.title}</span>
+              <button
+                onClick={(e) => { e.stopPropagation(); handleDeleteConversation(conv.id); }}
+                className="opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+              </button>
+            </div>
+          ))}
+        </div>
+      </ScrollArea>
+    </div>
+  );
+};
+
 const Chat = () => {
   const { user } = useAuth();
   const { t, language } = useLanguage();
@@ -48,10 +119,8 @@ const Chat = () => {
   const [conversationId, setConversationId] = useState<string>(() => crypto.randomUUID());
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [showScrollDown, setShowScrollDown] = useState(false);
+  const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -73,29 +142,29 @@ const Chat = () => {
       .from('chat_messages')
       .select('conversation_id, content, created_at, role')
       .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: true });
 
     if (!data) return;
 
     const convMap = new Map<string, Conversation>();
+    const convFirstUser = new Map<string, string>();
+
     for (const msg of data) {
-      if (!convMap.has(msg.conversation_id)) {
-        // Use first user message as title
-        const title = msg.role === 'user' ? msg.content.slice(0, 60) : '';
-        convMap.set(msg.conversation_id, {
-          id: msg.conversation_id,
-          title: title || 'New Chat',
-          lastMessage: msg.content.slice(0, 50),
-          createdAt: msg.created_at,
-        });
+      // Track first user message per conversation for title
+      if (msg.role === 'user' && !convFirstUser.has(msg.conversation_id)) {
+        convFirstUser.set(msg.conversation_id, msg.content.length > 50 ? msg.content.slice(0, 50) + '...' : msg.content);
       }
     }
 
-    // Fix titles: find first user message for each conversation
+    // Build conversations from last message (for ordering)
     for (const msg of [...data].reverse()) {
-      const conv = convMap.get(msg.conversation_id);
-      if (conv && msg.role === 'user' && (conv.title === 'New Chat' || conv.title === msg.content.slice(0, 60))) {
-        conv.title = msg.content.length > 50 ? msg.content.slice(0, 50) + '...' : msg.content;
+      if (!convMap.has(msg.conversation_id)) {
+        convMap.set(msg.conversation_id, {
+          id: msg.conversation_id,
+          title: convFirstUser.get(msg.conversation_id) || 'New Chat',
+          lastMessage: msg.content.slice(0, 50),
+          createdAt: msg.created_at,
+        });
       }
     }
 
@@ -178,61 +247,23 @@ const Chat = () => {
     }
   };
 
-  const filteredConversations = conversations.filter(c =>
-    c.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   const suggestedPrompts = language === 'en' ? SUGGESTED_PROMPTS_EN : SUGGESTED_PROMPTS_MS;
   const isNewChat = messages.length === 0;
 
   return (
-    <div className="flex h-[calc(100vh-3.5rem)] md:h-[calc(100vh-3.5rem)] overflow-hidden">
-      {/* Sidebar */}
-      <div className={`${sidebarOpen ? 'w-72' : 'w-0'} hidden md:block transition-all duration-300 border-r border-border/50 bg-card/50 flex-shrink-0 overflow-hidden`}>
-        <div className="flex flex-col h-full p-3 space-y-3">
-          <Button
-            onClick={handleNewChat}
-            className="w-full rounded-xl h-10 font-medium gap-2 glow-border"
-          >
-            <Plus className="h-4 w-4" />
-            {language === 'en' ? 'New Chat' : 'Perbualan Baru'}
-          </Button>
-
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              placeholder={language === 'en' ? 'Search chats...' : 'Cari perbualan...'}
-              className="pl-9 h-9 rounded-xl bg-muted/50 text-xs"
-            />
-          </div>
-
-          <ScrollArea className="flex-1">
-            <div className="space-y-1">
-              {filteredConversations.map(conv => (
-                <div
-                  key={conv.id}
-                  className={`group flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer transition-colors text-sm ${
-                    conv.id === conversationId
-                      ? 'bg-primary/10 text-foreground'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                  }`}
-                  onClick={() => setConversationId(conv.id)}
-                >
-                  <MessageCircle className="h-3.5 w-3.5 shrink-0" />
-                  <span className="truncate flex-1 text-xs font-medium">{conv.title}</span>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleDeleteConversation(conv.id); }}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <Trash2 className="h-3 w-3 text-muted-foreground hover:text-destructive" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </ScrollArea>
-        </div>
+    <div className="flex h-[calc(100vh-3.5rem-4rem)] md:h-[calc(100vh-3.5rem)] overflow-hidden">
+      {/* Desktop Sidebar */}
+      <div className="w-72 hidden md:block border-r border-border/50 bg-card/50 shrink-0 overflow-hidden">
+        <ChatSidebarContent
+          conversations={conversations}
+          conversationId={conversationId}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          setConversationId={setConversationId}
+          handleNewChat={handleNewChat}
+          handleDeleteConversation={handleDeleteConversation}
+          language={language}
+        />
       </div>
 
       {/* Main Chat */}
@@ -240,6 +271,28 @@ const Chat = () => {
         {/* Top Bar */}
         <div className="h-12 border-b border-border/50 flex items-center justify-between px-4 shrink-0">
           <div className="flex items-center gap-2 min-w-0">
+            {/* Mobile sidebar trigger */}
+            <Sheet open={mobileSheetOpen} onOpenChange={setMobileSheetOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="md:hidden h-9 w-9 rounded-full shrink-0">
+                  <PanelLeftOpen className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-72 p-0">
+                <ChatSidebarContent
+                  conversations={conversations}
+                  conversationId={conversationId}
+                  searchQuery={searchQuery}
+                  setSearchQuery={setSearchQuery}
+                  setConversationId={setConversationId}
+                  handleNewChat={handleNewChat}
+                  handleDeleteConversation={handleDeleteConversation}
+                  language={language}
+                  onSelect={() => setMobileSheetOpen(false)}
+                />
+              </SheetContent>
+            </Sheet>
+
             <Sparkles className="h-4 w-4 text-primary shrink-0" />
             <span className="text-sm font-medium truncate">
               {isNewChat
@@ -248,35 +301,38 @@ const Chat = () => {
               }
             </span>
           </div>
-          <div className="flex items-center gap-1">
-            <span className="text-[10px] text-muted-foreground">
+          <div className="flex items-center gap-2">
+            {/* Mobile new chat button */}
+            <Button variant="ghost" size="icon" className="md:hidden h-9 w-9 rounded-full" onClick={handleNewChat}>
+              <Plus className="h-5 w-5" />
+            </Button>
+            <span className="text-xs text-muted-foreground hidden sm:inline">
               {language === 'en' ? 'Auto-saved' : 'Disimpan automatik'}
             </span>
           </div>
         </div>
 
         {/* Chat Body */}
-        <div className="flex-1 overflow-y-auto p-4 relative" ref={scrollAreaRef}>
+        <div className="flex-1 overflow-y-auto p-4">
           {isNewChat ? (
-            /* Empty state with suggested prompts */
             <div className="flex flex-col items-center justify-center h-full animate-fade-in">
-              <div className="text-center space-y-4 max-w-lg">
+              <div className="text-center space-y-4 max-w-lg px-4">
                 <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
                   <Sparkles className="h-7 w-7 text-primary" />
                 </div>
-                <h2 className="text-2xl font-bold">
+                <h2 className="text-xl sm:text-2xl font-bold">
                   {language === 'en' ? 'How can I help you study?' : 'Bagaimana saya boleh membantu anda belajar?'}
                 </h2>
                 <p className="text-sm text-muted-foreground">
                   {language === 'en' ? 'Ask FokusZone AI anything about your studies' : 'Tanya FokusZone AI apa sahaja tentang pelajaran anda'}
                 </p>
               </div>
-              <div className="grid grid-cols-2 gap-2 mt-8 max-w-lg w-full">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-8 max-w-lg w-full px-4">
                 {suggestedPrompts.map((prompt) => (
                   <button
                     key={prompt}
                     onClick={() => handleSend(prompt)}
-                    className="p-3 rounded-xl bg-muted/50 text-xs text-left font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                    className="p-4 rounded-xl bg-muted/50 text-sm text-left font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                   >
                     {prompt}
                   </button>
@@ -287,7 +343,7 @@ const Chat = () => {
             <div className="space-y-4 max-w-3xl mx-auto">
               {messages.map((msg, i) => (
                 <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}>
-                  <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+                  <div className={`max-w-[85%] sm:max-w-[80%] rounded-2xl px-4 py-3 ${
                     msg.role === 'user'
                       ? 'bg-primary text-primary-foreground rounded-br-md'
                       : 'glass rounded-bl-md'
@@ -316,7 +372,7 @@ const Chat = () => {
         </div>
 
         {/* Input Bar */}
-        <div className="p-4 border-t border-border/50 shrink-0">
+        <div className="p-3 sm:p-4 border-t border-border/50 shrink-0">
           <form
             onSubmit={(e) => { e.preventDefault(); handleSend(); }}
             className="flex gap-2 max-w-3xl mx-auto"
@@ -324,12 +380,12 @@ const Chat = () => {
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder={language === 'en' ? 'Ask FokusZone AI anything about your studies...' : 'Tanya FokusZone AI apa sahaja tentang pelajaran anda...'}
+              placeholder={language === 'en' ? 'Ask FokusZone AI anything...' : 'Tanya FokusZone AI apa sahaja...'}
               disabled={loading}
-              className="rounded-full h-11 bg-muted/50 text-sm px-5"
+              className="rounded-full h-12 bg-muted/50 text-sm px-5"
             />
-            <Button type="submit" size="icon" disabled={loading || !input.trim()} className="rounded-full h-11 w-11 shrink-0">
-              <Send className="h-4 w-4" />
+            <Button type="submit" size="icon" disabled={loading || !input.trim()} className="rounded-full h-12 w-12 shrink-0">
+              <Send className="h-5 w-5" />
             </Button>
           </form>
         </div>

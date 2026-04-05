@@ -8,12 +8,12 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import ThemeToggle from '@/components/ThemeToggle';
-import { User, Palette, BookOpen, Shield, BarChart3, Save } from 'lucide-react';
+import { User, Palette, BookOpen, Shield, BarChart3, Save, LogOut } from 'lucide-react';
 
 type Tab = 'account' | 'appearance' | 'study' | 'security' | 'progress';
 
 const Settings = () => {
-  const { user, profile, updateProfile } = useAuth();
+  const { user, profile, updateProfile, updatePassword, signOut } = useAuth();
   const { language, setLanguage } = useLanguage();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<Tab>('account');
@@ -21,6 +21,18 @@ const Settings = () => {
   const [formLevel, setFormLevel] = useState(String(profile?.form_level || 1));
   const [saving, setSaving] = useState(false);
   const [chatCount, setChatCount] = useState(0);
+
+  // Password change
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [changingPassword, setChangingPassword] = useState(false);
+
+  useEffect(() => {
+    if (profile) {
+      setDisplayName(profile.display_name || '');
+      setFormLevel(String(profile.form_level || 1));
+    }
+  }, [profile]);
 
   useEffect(() => {
     if (!user) return;
@@ -54,20 +66,42 @@ const Settings = () => {
     }
   };
 
+  const handlePasswordChange = async () => {
+    if (newPassword.length < 6) {
+      toast({ title: language === 'en' ? 'Password must be at least 6 characters' : 'Kata laluan mesti sekurang-kurangnya 6 aksara', variant: 'destructive' });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast({ title: language === 'en' ? 'Passwords do not match' : 'Kata laluan tidak sepadan', variant: 'destructive' });
+      return;
+    }
+    setChangingPassword(true);
+    try {
+      await updatePassword(newPassword);
+      toast({ title: language === 'en' ? 'Password updated!' : 'Kata laluan dikemaskini!' });
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err: any) {
+      toast({ title: err.message, variant: 'destructive' });
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
   return (
-    <div className="container mx-auto px-4 py-6 max-w-4xl pb-20 md:pb-6">
+    <div className="container mx-auto px-4 sm:px-6 py-6 max-w-4xl pb-24 md:pb-6">
       <h1 className="text-2xl font-bold tracking-tight mb-6">
         {language === 'en' ? 'Settings' : 'Tetapan'}
       </h1>
 
       <div className="flex flex-col md:flex-row gap-6">
         {/* Tab Nav */}
-        <div className="md:w-56 flex md:flex-col gap-1 overflow-x-auto pb-2 md:pb-0">
+        <div className="md:w-56 flex md:flex-col gap-1 overflow-x-auto pb-2 md:pb-0 shrink-0">
           {tabs.map(({ id, icon: Icon, label }) => (
             <button
               key={id}
               onClick={() => setActiveTab(id)}
-              className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-colors ${
+              className={`flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-medium whitespace-nowrap transition-colors ${
                 activeTab === id
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted'
@@ -80,32 +114,32 @@ const Settings = () => {
         </div>
 
         {/* Content */}
-        <div className="flex-1 glass rounded-2xl p-6">
+        <div className="flex-1 glass rounded-2xl p-5 sm:p-6">
           {activeTab === 'account' && (
             <div className="space-y-6 animate-fade-in">
               <h2 className="text-lg font-semibold">{language === 'en' ? 'Account Settings' : 'Tetapan Akaun'}</h2>
 
               <div className="flex items-center gap-4 mb-6">
-                <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+                <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                   <span className="text-2xl font-bold text-primary">
                     {displayName?.charAt(0)?.toUpperCase() || '?'}
                   </span>
                 </div>
-                <div>
-                  <p className="font-medium">{displayName || 'Student'}</p>
-                  <p className="text-xs text-muted-foreground">{user?.email}</p>
+                <div className="min-w-0">
+                  <p className="font-medium truncate">{displayName || 'Student'}</p>
+                  <p className="text-sm text-muted-foreground truncate">{user?.email}</p>
                 </div>
               </div>
 
               <div className="space-y-4 max-w-md">
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-medium">{language === 'en' ? 'Display Name' : 'Nama Paparan'}</Label>
-                  <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="h-10 rounded-xl bg-muted/50" />
+                  <Label className="text-sm font-medium">{language === 'en' ? 'Display Name' : 'Nama Paparan'}</Label>
+                  <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} autoComplete="name" className="h-11 rounded-xl bg-muted/50" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-medium">{language === 'en' ? 'Form Level' : 'Tingkatan'}</Label>
+                  <Label className="text-sm font-medium">{language === 'en' ? 'Form Level' : 'Tingkatan'}</Label>
                   <Select value={formLevel} onValueChange={setFormLevel}>
-                    <SelectTrigger className="h-10 rounded-xl bg-muted/50"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="h-11 rounded-xl bg-muted/50"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {[1, 2, 3, 4, 5].map(l => (
                         <SelectItem key={l} value={String(l)}>
@@ -116,10 +150,10 @@ const Settings = () => {
                   </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-medium">{language === 'en' ? 'Email' : 'E-mel'}</Label>
-                  <Input value={user?.email || ''} disabled className="h-10 rounded-xl bg-muted/50 opacity-60" />
+                  <Label className="text-sm font-medium">{language === 'en' ? 'Email' : 'E-mel'}</Label>
+                  <Input value={user?.email || ''} disabled className="h-11 rounded-xl bg-muted/50 opacity-60" />
                 </div>
-                <Button onClick={handleSaveProfile} disabled={saving} className="rounded-full gap-2">
+                <Button onClick={handleSaveProfile} disabled={saving} className="rounded-full gap-2 h-11">
                   <Save className="h-4 w-4" />
                   {saving ? '...' : language === 'en' ? 'Save Changes' : 'Simpan Perubahan'}
                 </Button>
@@ -147,7 +181,7 @@ const Settings = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => setLanguage(language === 'en' ? 'ms' : 'en')}
-                    className="rounded-full text-xs"
+                    className="rounded-full text-xs h-9"
                   >
                     {language === 'en' ? 'BM' : 'EN'}
                   </Button>
@@ -164,8 +198,8 @@ const Settings = () => {
               </p>
               <div className="grid grid-cols-2 gap-3">
                 {['Mathematics', 'Science', 'Bahasa Melayu', 'English', 'Sejarah', 'Geography'].map(subj => (
-                  <div key={subj} className="p-3 rounded-xl bg-muted/50 text-sm font-medium flex items-center gap-2">
-                    <div className="h-2 w-2 rounded-full bg-primary" />
+                  <div key={subj} className="p-4 rounded-xl bg-muted/50 text-sm font-medium flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-primary shrink-0" />
                     {subj}
                   </div>
                 ))}
@@ -176,9 +210,51 @@ const Settings = () => {
           {activeTab === 'security' && (
             <div className="space-y-6 animate-fade-in">
               <h2 className="text-lg font-semibold">{language === 'en' ? 'Security' : 'Keselamatan'}</h2>
-              <div className="p-4 rounded-xl bg-muted/50 space-y-2">
-                <p className="font-medium text-sm">{language === 'en' ? 'Password' : 'Kata Laluan'}</p>
-                <p className="text-xs text-muted-foreground">{language === 'en' ? 'Use the forgot password option on the login page to reset your password.' : 'Gunakan pilihan lupa kata laluan di halaman log masuk untuk menetapkan semula kata laluan anda.'}</p>
+
+              <div className="space-y-4 max-w-md">
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-medium">{language === 'en' ? 'New Password' : 'Kata Laluan Baru'}</Label>
+                  <Input
+                    type="password"
+                    autoComplete="new-password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="••••••••"
+                    minLength={6}
+                    className="h-11 rounded-xl bg-muted/50"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-medium">{language === 'en' ? 'Confirm Password' : 'Sahkan Kata Laluan'}</Label>
+                  <Input
+                    type="password"
+                    autoComplete="new-password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="••••••••"
+                    minLength={6}
+                    className="h-11 rounded-xl bg-muted/50"
+                  />
+                </div>
+                <Button
+                  onClick={handlePasswordChange}
+                  disabled={changingPassword || !newPassword || !confirmPassword}
+                  className="rounded-full h-11 gap-2"
+                >
+                  <Shield className="h-4 w-4" />
+                  {changingPassword ? '...' : language === 'en' ? 'Update Password' : 'Kemaskini Kata Laluan'}
+                </Button>
+              </div>
+
+              <div className="border-t border-border pt-6 max-w-md">
+                <Button
+                  variant="destructive"
+                  onClick={signOut}
+                  className="rounded-full h-11 gap-2"
+                >
+                  <LogOut className="h-4 w-4" />
+                  {language === 'en' ? 'Sign Out from All Devices' : 'Log Keluar dari Semua Peranti'}
+                </Button>
               </div>
             </div>
           )}
@@ -187,13 +263,13 @@ const Settings = () => {
             <div className="space-y-6 animate-fade-in">
               <h2 className="text-lg font-semibold">{language === 'en' ? 'Progress Data' : 'Data Kemajuan'}</h2>
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 rounded-xl bg-muted/50 text-center">
-                  <p className="text-2xl font-bold text-primary">{chatCount}</p>
-                  <p className="text-xs text-muted-foreground">{language === 'en' ? 'Total Chats' : 'Jumlah Perbualan'}</p>
+                <div className="p-5 rounded-xl bg-muted/50 text-center">
+                  <p className="text-3xl font-bold text-primary">{chatCount}</p>
+                  <p className="text-sm text-muted-foreground mt-1">{language === 'en' ? 'Total Chats' : 'Jumlah Perbualan'}</p>
                 </div>
-                <div className="p-4 rounded-xl bg-muted/50 text-center">
-                  <p className="text-2xl font-bold text-primary">{profile?.form_level || 1}</p>
-                  <p className="text-xs text-muted-foreground">{language === 'en' ? 'Form Level' : 'Tingkatan'}</p>
+                <div className="p-5 rounded-xl bg-muted/50 text-center">
+                  <p className="text-3xl font-bold text-primary">{profile?.form_level || 1}</p>
+                  <p className="text-sm text-muted-foreground mt-1">{language === 'en' ? 'Form Level' : 'Tingkatan'}</p>
                 </div>
               </div>
             </div>
