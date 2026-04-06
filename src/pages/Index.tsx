@@ -3,18 +3,22 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
-import { MessageCircle, Brain, Trophy, TrendingUp, Clock, ArrowRight, Play, Pause, RotateCcw } from 'lucide-react';
+import { usePomodoro, getStreak, getSessionHistory } from '@/hooks/usePomodoro';
+import { MessageCircle, Brain, Trophy, TrendingUp, Clock, ArrowRight, Play, Pause, RotateCcw, Flame, Zap, Coffee, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 
 const Index = () => {
   const { user, profile } = useAuth();
-  const { t, language } = useLanguage();
+  const { language } = useLanguage();
   const [recentQuizzes, setRecentQuizzes] = useState<any[]>([]);
   const [chatCount, setChatCount] = useState(0);
+  const [lastChat, setLastChat] = useState<{ id: string; title: string } | null>(null);
+  const streak = getStreak();
+  const focusHistory = getSessionHistory();
+  const completedToday = focusHistory.filter(s => new Date(s.date).toDateString() === new Date().toDateString() && s.completed && s.mode === 'work').length;
 
-  // Pomodoro
-  const [pomodoroTime, setPomodoroTime] = useState(25 * 60);
-  const [pomodoroRunning, setPomodoroRunning] = useState(false);
+  const pomodoro = usePomodoro();
 
   useEffect(() => {
     if (!user) return;
@@ -28,21 +32,25 @@ const Index = () => {
 
     supabase
       .from('chat_messages')
-      .select('conversation_id')
+      .select('conversation_id, content, role')
       .eq('user_id', user.id)
+      .order('created_at', { ascending: true })
       .then(({ data }) => {
-        const unique = new Set(data?.map(d => d.conversation_id));
+        if (!data) return;
+        const unique = new Set(data.map(d => d.conversation_id));
         setChatCount(unique.size);
+        // Find last conversation's first user message for title
+        const convIds = Array.from(unique);
+        if (convIds.length > 0) {
+          const lastId = convIds[convIds.length - 1];
+          const firstMsg = data.find(d => d.conversation_id === lastId && d.role === 'user');
+          setLastChat({
+            id: lastId,
+            title: firstMsg ? (firstMsg.content.length > 40 ? firstMsg.content.slice(0, 40) + '...' : firstMsg.content) : 'Chat',
+          });
+        }
       });
   }, [user]);
-
-  useEffect(() => {
-    let interval: ReturnType<typeof setInterval>;
-    if (pomodoroRunning && pomodoroTime > 0) {
-      interval = setInterval(() => setPomodoroTime(t => t - 1), 1000);
-    }
-    return () => clearInterval(interval);
-  }, [pomodoroRunning, pomodoroTime]);
 
   const displayName = profile?.display_name || (language === 'en' ? 'Student' : 'Pelajar');
   const formLabel = language === 'en' ? `Form ${profile?.form_level || 1}` : `Tingkatan ${profile?.form_level || 1}`;
@@ -50,14 +58,17 @@ const Index = () => {
     ? Math.round(recentQuizzes.reduce((s, q) => s + Number(q.score_percentage), 0) / recentQuizzes.length)
     : 0;
 
-  const pomodoroMin = Math.floor(pomodoroTime / 60);
-  const pomodoroSec = pomodoroTime % 60;
+  const modeLabels = {
+    work: language === 'en' ? 'Focus' : 'Fokus',
+    shortBreak: language === 'en' ? 'Short Break' : 'Rehat Pendek',
+    longBreak: language === 'en' ? 'Long Break' : 'Rehat Panjang',
+  };
 
   const stats = [
     { icon: MessageCircle, value: chatCount, label: language === 'en' ? 'Chats' : 'Perbualan', color: 'text-primary' },
     { icon: Brain, value: recentQuizzes.length, label: language === 'en' ? 'Quizzes' : 'Kuiz', color: 'text-primary' },
     { icon: Trophy, value: `${avgScore}%`, label: language === 'en' ? 'Avg Score' : 'Skor Purata', color: 'text-[hsl(var(--success))]' },
-    { icon: TrendingUp, value: formLabel, label: language === 'en' ? 'Level' : 'Tahap', color: 'text-primary' },
+    { icon: Flame, value: streak, label: language === 'en' ? 'Streak' : 'Kesinambungan', color: 'text-orange-500' },
   ];
 
   return (
@@ -65,7 +76,7 @@ const Index = () => {
       {/* Welcome */}
       <div className="space-y-1 animate-fade-in">
         <h1 className="font-bold tracking-tight">
-          {t('welcome')}, <span className="text-gradient">{displayName}</span>
+          {language === 'en' ? 'Welcome' : 'Selamat Datang'}, <span className="text-gradient">{displayName}</span>
         </h1>
         <p className="text-muted-foreground">{formLabel} · {language === 'en' ? 'Keep up the great work!' : 'Teruskan usaha yang baik!'}</p>
       </div>
@@ -80,6 +91,54 @@ const Index = () => {
           </div>
         ))}
       </div>
+
+      {/* Continue Where You Left Off */}
+      {(lastChat || recentQuizzes.length > 0 || pomodoro.running) && (
+        <div className="animate-fade-in" style={{ animationDelay: '0.12s' }}>
+          <h2 className="font-semibold mb-3">{language === 'en' ? 'Continue Where You Left Off' : 'Sambung Semula'}</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {pomodoro.running && (
+              <Link to="/" onClick={(e) => { e.preventDefault(); document.getElementById('pomodoro-section')?.scrollIntoView({ behavior: 'smooth' }); }}>
+                <div className="glass rounded-xl p-4 glass-hover flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <Clock className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-medium text-sm truncate">{modeLabels[pomodoro.mode]}</p>
+                    <p className="text-xs text-muted-foreground">{String(pomodoro.minutes).padStart(2, '0')}:{String(pomodoro.seconds).padStart(2, '0')} {language === 'en' ? 'remaining' : 'berbaki'}</p>
+                  </div>
+                </div>
+              </Link>
+            )}
+            {lastChat && (
+              <Link to="/chat">
+                <div className="glass rounded-xl p-4 glass-hover flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <MessageCircle className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-medium text-sm truncate">{lastChat.title}</p>
+                    <p className="text-xs text-muted-foreground">{language === 'en' ? 'Last chat' : 'Perbualan terakhir'}</p>
+                  </div>
+                </div>
+              </Link>
+            )}
+            {recentQuizzes.length > 0 && (
+              <Link to="/quiz">
+                <div className="glass rounded-xl p-4 glass-hover flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <Brain className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-medium text-sm truncate">{recentQuizzes[0].subject}</p>
+                    <p className="text-xs text-muted-foreground">{language === 'en' ? 'Last quiz' : 'Kuiz terakhir'} · {recentQuizzes[0].score_percentage}%</p>
+                  </div>
+                </div>
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 animate-fade-in" style={{ animationDelay: '0.15s' }}>
@@ -118,41 +177,71 @@ const Index = () => {
       </div>
 
       {/* Pomodoro Timer */}
-      <div className="glass rounded-xl p-5 glow-border animate-fade-in" style={{ animationDelay: '0.2s' }}>
-        <div className="flex items-center justify-between flex-wrap gap-4">
+      <div id="pomodoro-section" className="glass rounded-xl p-5 glow-border animate-fade-in" style={{ animationDelay: '0.2s' }}>
+        <div className="flex items-center justify-between flex-wrap gap-4 mb-4">
           <div className="flex items-center gap-3">
             <div className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
               <Clock className="h-5 w-5 text-primary" />
             </div>
             <div>
               <h3 className="font-semibold">{language === 'en' ? 'Focus Timer' : 'Pemasa Fokus'}</h3>
-              <p className="text-sm text-muted-foreground">{language === 'en' ? 'Pomodoro technique' : 'Teknik Pomodoro'}</p>
+              <p className="text-sm text-muted-foreground">
+                {modeLabels[pomodoro.mode]} · {language === 'en' ? `Cycle ${pomodoro.cycleCount + 1}` : `Kitaran ${pomodoro.cycleCount + 1}`}
+              </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <span className="text-3xl font-bold font-mono tracking-wider">
-              {String(pomodoroMin).padStart(2, '0')}:{String(pomodoroSec).padStart(2, '0')}
-            </span>
-            <div className="flex gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-10 w-10 rounded-full"
-                onClick={() => setPomodoroRunning(!pomodoroRunning)}
-              >
-                {pomodoroRunning ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-10 w-10 rounded-full"
-                onClick={() => { setPomodoroTime(25 * 60); setPomodoroRunning(false); }}
-              >
-                <RotateCcw className="h-4 w-4" />
-              </Button>
-            </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium text-muted-foreground">{completedToday} {language === 'en' ? 'sessions today' : 'sesi hari ini'}</span>
           </div>
+        </div>
+
+        {/* Mode Selector */}
+        <div className="flex gap-2 mb-4">
+          {(['work', 'shortBreak', 'longBreak'] as const).map((m) => (
+            <Button
+              key={m}
+              variant={pomodoro.mode === m ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => pomodoro.setMode(m)}
+              className="rounded-full text-xs h-8 gap-1.5"
+            >
+              {m === 'work' && <Target className="h-3.5 w-3.5" />}
+              {m === 'shortBreak' && <Coffee className="h-3.5 w-3.5" />}
+              {m === 'longBreak' && <Zap className="h-3.5 w-3.5" />}
+              {modeLabels[m]}
+            </Button>
+          ))}
+        </div>
+
+        {/* Timer Display */}
+        <div className="flex items-center justify-center gap-4 py-4">
+          <span className="text-5xl sm:text-6xl font-bold font-mono tracking-wider">
+            {String(pomodoro.minutes).padStart(2, '0')}:{String(pomodoro.seconds).padStart(2, '0')}
+          </span>
+        </div>
+
+        {/* Progress Bar */}
+        <Progress value={pomodoro.progress} className="h-1.5 rounded-full mb-4" />
+
+        {/* Controls */}
+        <div className="flex justify-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-12 w-12 rounded-full"
+            onClick={pomodoro.reset}
+          >
+            <RotateCcw className="h-5 w-5" />
+          </Button>
+          <Button
+            size="icon"
+            className="h-14 w-14 rounded-full"
+            onClick={pomodoro.toggle}
+          >
+            {pomodoro.running ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6 ml-0.5" />}
+          </Button>
+          <div className="w-12" /> {/* spacer for alignment */}
         </div>
       </div>
 
@@ -160,7 +249,7 @@ const Index = () => {
       {recentQuizzes.length > 0 && (
         <div className="space-y-3 animate-fade-in" style={{ animationDelay: '0.25s' }}>
           <div className="flex items-center justify-between">
-            <h2 className="font-semibold">{t('recentQuizzes')}</h2>
+            <h2 className="font-semibold">{language === 'en' ? 'Recent Quizzes' : 'Kuiz Terkini'}</h2>
             <Link to="/history" className="text-sm text-primary font-medium hover:underline">
               {language === 'en' ? 'View all' : 'Lihat semua'}
             </Link>
