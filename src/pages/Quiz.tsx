@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, CheckCircle2, XCircle, ArrowRight, RotateCcw, Brain } from 'lucide-react';
+import { Loader2, CheckCircle2, XCircle, ArrowRight, RotateCcw, Brain, Timer, Zap, Flame, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Confetti from 'react-confetti';
 
@@ -33,7 +33,14 @@ const SUBJECTS = [
   { key: 'physicsSubject', value: 'Physics' },
   { key: 'chemistrySubject', value: 'Chemistry' },
   { key: 'biologySubject', value: 'Biology' },
+  { value: 'ASAS', key: 'asasSubject' },
+  { value: 'Sains Komputer', key: 'sainsKomputerSubject' },
 ];
+
+const QUESTION_TIMER = 30; // seconds per question
+const XP_BASE = 10;
+const XP_SPEED_BONUS_MAX = 5;
+const XP_STREAK_MULTIPLIER = 2;
 
 const Quiz = () => {
   const { user, profile } = useAuth();
@@ -55,6 +62,47 @@ const Quiz = () => {
   const [shortAnswerInput, setShortAnswerInput] = useState('');
   const [showConfetti, setShowConfetti] = useState(false);
 
+  // Gamification state
+  const [questionTimer, setQuestionTimer] = useState(QUESTION_TIMER);
+  const [comboStreak, setComboStreak] = useState(0);
+  const [maxCombo, setMaxCombo] = useState(0);
+  const [xpEarned, setXpEarned] = useState(0);
+  const [answerTimes, setAnswerTimes] = useState<Record<number, number>>({});
+  const [showFeedback, setShowFeedback] = useState<'correct' | 'incorrect' | null>(null);
+  const [retryMode, setRetryMode] = useState(false);
+  const [wrongQuestions, setWrongQuestions] = useState<number[]>([]);
+
+  // Question countdown timer
+  useEffect(() => {
+    if (step !== 'quiz' || !questions.length) return;
+    if (showFeedback) return; // pause during feedback
+    const interval = setInterval(() => {
+      setQuestionTimer(prev => {
+        if (prev <= 1) {
+          // Time's up — auto-advance
+          handleAutoAdvance();
+          return QUESTION_TIMER;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [step, currentQ, questions.length, showFeedback]);
+
+  // Reset timer on question change
+  useEffect(() => {
+    if (step === 'quiz') setQuestionTimer(QUESTION_TIMER);
+  }, [currentQ, step]);
+
+  const handleAutoAdvance = useCallback(() => {
+    if (currentQ < questions.length - 1) {
+      setComboStreak(0);
+      setCurrentQ(prev => prev + 1);
+    } else {
+      doSubmit();
+    }
+  }, [currentQ, questions.length]);
+
   const handleGenerate = async () => {
     if (!user) return;
     setGenerating(true);
@@ -67,6 +115,12 @@ const Quiz = () => {
       setStep('quiz');
       setCurrentQ(0);
       setAnswers({});
+      setComboStreak(0);
+      setMaxCombo(0);
+      setXpEarned(0);
+      setAnswerTimes({});
+      setRetryMode(false);
+      setWrongQuestions([]);
     } catch (err) {
       console.error(err);
     } finally {
@@ -75,29 +129,82 @@ const Quiz = () => {
   };
 
   const selectAnswer = (answer: string) => {
+    if (showFeedback) return;
     setAnswers(prev => ({ ...prev, [currentQ]: answer }));
-  };
+    const timeSpent = QUESTION_TIMER - questionTimer;
+    setAnswerTimes(prev => ({ ...prev, [currentQ]: timeSpent }));
 
-  const handleNext = () => {
-    if (questions[currentQ]?.type === 'short_answer' || questions[currentQ]?.type === 'fill_blank') {
-      if (shortAnswerInput.trim()) {
-        setAnswers(prev => ({ ...prev, [currentQ]: shortAnswerInput.trim() }));
-        setShortAnswerInput('');
+    // Check answer immediately for feedback
+    const isCorrect = answer.toLowerCase().trim() === questions[currentQ].correct_answer.toLowerCase().trim();
+    
+    if (isCorrect) {
+      const newStreak = comboStreak + 1;
+      setComboStreak(newStreak);
+      if (newStreak > maxCombo) setMaxCombo(newStreak);
+      const speedBonus = Math.max(0, Math.round((1 - timeSpent / QUESTION_TIMER) * XP_SPEED_BONUS_MAX));
+      const streakBonus = newStreak >= 3 ? XP_STREAK_MULTIPLIER : 0;
+      setXpEarned(prev => prev + XP_BASE + speedBonus + streakBonus);
+      setShowFeedback('correct');
+    } else {
+      setComboStreak(0);
+      setShowFeedback('incorrect');
+    }
+
+    // Auto-advance after short delay
+    setTimeout(() => {
+      setShowFeedback(null);
+      if (currentQ < questions.length - 1) {
+        setCurrentQ(prev => prev + 1);
+      } else {
+        doSubmit();
       }
-    }
-    if (currentQ < questions.length - 1) setCurrentQ(prev => prev + 1);
+    }, 800);
   };
 
-  const handleSubmit = async () => {
-    if ((questions[currentQ]?.type === 'short_answer' || questions[currentQ]?.type === 'fill_blank') && shortAnswerInput.trim()) {
-      answers[currentQ] = shortAnswerInput.trim();
+  const handleShortAnswer = () => {
+    if (!shortAnswerInput.trim() || showFeedback) return;
+    const answer = shortAnswerInput.trim();
+    setAnswers(prev => ({ ...prev, [currentQ]: answer }));
+    const timeSpent = QUESTION_TIMER - questionTimer;
+    setAnswerTimes(prev => ({ ...prev, [currentQ]: timeSpent }));
+
+    const isCorrect = answer.toLowerCase() === questions[currentQ].correct_answer.toLowerCase().trim();
+    if (isCorrect) {
+      const newStreak = comboStreak + 1;
+      setComboStreak(newStreak);
+      if (newStreak > maxCombo) setMaxCombo(newStreak);
+      const speedBonus = Math.max(0, Math.round((1 - timeSpent / QUESTION_TIMER) * XP_SPEED_BONUS_MAX));
+      setXpEarned(prev => prev + XP_BASE + speedBonus + (newStreak >= 3 ? XP_STREAK_MULTIPLIER : 0));
+      setShowFeedback('correct');
+    } else {
+      setComboStreak(0);
+      setShowFeedback('incorrect');
     }
 
+    setShortAnswerInput('');
+    setTimeout(() => {
+      setShowFeedback(null);
+      if (currentQ < questions.length - 1) {
+        setCurrentQ(prev => prev + 1);
+      } else {
+        doSubmit();
+      }
+    }, 800);
+  };
+
+  const doSubmit = async () => {
     const correctCount = questions.reduce((count, q, i) => {
       return count + ((answers[i] || '').toLowerCase().trim() === q.correct_answer.toLowerCase().trim() ? 1 : 0);
     }, 0);
     const percentage = Math.round((correctCount / questions.length) * 100);
     if (percentage >= 80) setShowConfetti(true);
+
+    // Find wrong questions for retry
+    const wrong = questions.reduce<number[]>((acc, q, i) => {
+      if ((answers[i] || '').toLowerCase().trim() !== q.correct_answer.toLowerCase().trim()) acc.push(i);
+      return acc;
+    }, []);
+    setWrongQuestions(wrong);
 
     if (user) {
       await supabase.from('quiz_results').insert({
@@ -112,10 +219,25 @@ const Quiz = () => {
     setTimeout(() => setShowConfetti(false), 5000);
   };
 
+  const handleRetryWrong = () => {
+    if (wrongQuestions.length === 0) return;
+    setRetryMode(true);
+    setCurrentQ(wrongQuestions[0]);
+    // Clear only wrong answers
+    const newAnswers = { ...answers };
+    wrongQuestions.forEach(i => delete newAnswers[i]);
+    setAnswers(newAnswers);
+    setStep('quiz');
+    setComboStreak(0);
+  };
+
   const correctCount = questions.reduce((count, q, i) => {
     return count + ((answers[i] || '').toLowerCase().trim() === q.correct_answer.toLowerCase().trim() ? 1 : 0);
   }, 0);
   const percentage = questions.length > 0 ? Math.round((correctCount / questions.length) * 100) : 0;
+
+  const timerPercentage = (questionTimer / QUESTION_TIMER) * 100;
+  const timerColor = questionTimer <= 5 ? 'text-destructive' : questionTimer <= 10 ? 'text-orange-500' : 'text-primary';
 
   if (step === 'configure') {
     return (
@@ -146,7 +268,7 @@ const Quiz = () => {
               <Select value={subject} onValueChange={setSubject}>
                 <SelectTrigger className="rounded-xl bg-muted/50 h-11"><SelectValue placeholder={t('selectSubject')} /></SelectTrigger>
                 <SelectContent>
-                  {SUBJECTS.map(s => <SelectItem key={s.value} value={s.value}>{t(s.key as any)}</SelectItem>)}
+                  {SUBJECTS.map(s => <SelectItem key={s.value} value={s.value}>{s.value}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -217,15 +339,65 @@ const Quiz = () => {
 
   if (step === 'quiz' && questions.length > 0) {
     const q = questions[currentQ];
+    const questionsToShow = retryMode ? wrongQuestions : questions.map((_, i) => i);
+    const positionInSet = retryMode ? wrongQuestions.indexOf(currentQ) + 1 : currentQ + 1;
+    const totalInSet = questionsToShow.length;
+
     return (
       <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-2xl pb-24 md:pb-8">
-        <div className="mb-6">
-          <div className="flex justify-between text-sm text-muted-foreground mb-2">
-            <span>{t('question')} {currentQ + 1} {t('of')} {questions.length}</span>
-            <span>{Math.round(((currentQ + 1) / questions.length) * 100)}%</span>
+        {/* Top bar: progress + timer + combo */}
+        <div className="mb-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">
+              {retryMode ? `${language === 'en' ? 'Retry' : 'Cuba semula'} ` : ''}
+              {t('question')} {positionInSet} {t('of')} {totalInSet}
+            </span>
+            <div className="flex items-center gap-3">
+              {/* Combo */}
+              {comboStreak >= 2 && (
+                <div className="flex items-center gap-1 text-orange-500 animate-fade-in">
+                  <Flame className="h-4 w-4" />
+                  <span className="text-sm font-bold">{comboStreak}x</span>
+                </div>
+              )}
+              {/* XP */}
+              <div className="flex items-center gap-1 text-primary">
+                <Star className="h-4 w-4" />
+                <span className="text-sm font-bold">{xpEarned} XP</span>
+              </div>
+            </div>
           </div>
-          <Progress value={((currentQ + 1) / questions.length) * 100} className="h-2 rounded-full" />
+          <Progress value={((positionInSet) / totalInSet) * 100} className="h-2 rounded-full" />
         </div>
+
+        {/* Question Timer */}
+        <div className="flex items-center justify-center gap-2 mb-4">
+          <Timer className={`h-5 w-5 ${timerColor}`} />
+          <div className="relative w-48 h-2 bg-muted rounded-full overflow-hidden">
+            <div
+              className={`absolute left-0 top-0 h-full rounded-full transition-all duration-1000 ${
+                questionTimer <= 5 ? 'bg-destructive' : questionTimer <= 10 ? 'bg-orange-500' : 'bg-primary'
+              }`}
+              style={{ width: `${timerPercentage}%` }}
+            />
+          </div>
+          <span className={`text-sm font-bold font-mono ${timerColor}`}>{questionTimer}s</span>
+        </div>
+
+        {/* Feedback overlay */}
+        {showFeedback && (
+          <div className={`fixed inset-0 z-50 flex items-center justify-center pointer-events-none ${
+            showFeedback === 'correct' ? 'animate-fade-in' : 'animate-fade-in'
+          }`}>
+            <div className={`rounded-full p-6 ${
+              showFeedback === 'correct' ? 'bg-[hsl(var(--success))]/20' : 'bg-destructive/20'
+            }`}>
+              {showFeedback === 'correct' 
+                ? <CheckCircle2 className="h-16 w-16 text-[hsl(var(--success))]" />
+                : <XCircle className="h-16 w-16 text-destructive" />}
+            </div>
+          </div>
+        )}
 
         <div className="glass rounded-2xl p-5 sm:p-6 glow-border animate-fade-in">
           <h2 className="text-lg font-semibold leading-relaxed mb-5">{q.question}</h2>
@@ -235,11 +407,12 @@ const Quiz = () => {
               <button
                 key={i}
                 onClick={() => selectAnswer(opt)}
+                disabled={!!showFeedback}
                 className={`w-full text-left p-4 rounded-xl border transition-all text-sm min-h-[52px] ${
                   answers[currentQ] === opt
                     ? 'border-primary bg-primary/10 font-medium'
                     : 'border-border/50 hover:border-primary/30 hover:bg-muted/50'
-                }`}
+                } ${showFeedback ? 'pointer-events-none' : ''}`}
               >
                 <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-muted text-sm font-bold mr-3 shrink-0">
                   {String.fromCharCode(65 + i)}
@@ -249,33 +422,18 @@ const Quiz = () => {
             ))}
 
             {(q.type === 'short_answer' || q.type === 'fill_blank') && (
-              <Input
-                value={answers[currentQ] || shortAnswerInput}
-                onChange={(e) => {
-                  setShortAnswerInput(e.target.value);
-                  setAnswers(prev => ({ ...prev, [currentQ]: e.target.value }));
-                }}
-                placeholder={language === 'en' ? 'Type your answer...' : 'Taip jawapan anda...'}
-                className="rounded-xl h-12 bg-muted/50"
-              />
-            )}
-          </div>
-
-          <div className="flex gap-3 pt-6">
-            {currentQ > 0 && (
-              <Button variant="outline" onClick={() => setCurrentQ(prev => prev - 1)} className="rounded-full h-11">
-                {t('previous')}
-              </Button>
-            )}
-            <div className="flex-1" />
-            {currentQ < questions.length - 1 ? (
-              <Button onClick={handleNext} disabled={!answers[currentQ]} className="rounded-full gap-2 h-11">
-                {t('next')} <ArrowRight className="h-4 w-4" />
-              </Button>
-            ) : (
-              <Button onClick={handleSubmit} disabled={!answers[currentQ]} className="rounded-full h-11">
-                {t('submit')}
-              </Button>
+              <form onSubmit={(e) => { e.preventDefault(); handleShortAnswer(); }} className="flex gap-2">
+                <Input
+                  value={shortAnswerInput}
+                  onChange={(e) => setShortAnswerInput(e.target.value)}
+                  placeholder={language === 'en' ? 'Type your answer...' : 'Taip jawapan anda...'}
+                  className="rounded-xl h-12 bg-muted/50"
+                  disabled={!!showFeedback}
+                />
+                <Button type="submit" className="rounded-xl h-12 px-6" disabled={!shortAnswerInput.trim() || !!showFeedback}>
+                  <ArrowRight className="h-5 w-5" />
+                </Button>
+              </form>
             )}
           </div>
         </div>
@@ -293,9 +451,34 @@ const Quiz = () => {
             {percentage >= 70 ? t('congratulations') : t('keepTrying')}
           </h2>
           <p className="text-5xl font-bold text-gradient my-4">{percentage}%</p>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground mb-4">
             {correctCount}/{questions.length} {t('correct')}
           </p>
+
+          {/* XP & Stats Summary */}
+          <div className="flex justify-center gap-6 mt-4 mb-2">
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-1 text-primary">
+                <Star className="h-5 w-5" />
+                <span className="text-lg font-bold">{xpEarned}</span>
+              </div>
+              <p className="text-xs text-muted-foreground">XP {language === 'en' ? 'Earned' : 'Diperoleh'}</p>
+            </div>
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-1 text-orange-500">
+                <Flame className="h-5 w-5" />
+                <span className="text-lg font-bold">{maxCombo}x</span>
+              </div>
+              <p className="text-xs text-muted-foreground">{language === 'en' ? 'Max Combo' : 'Kombo Maks'}</p>
+            </div>
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-1 text-[hsl(var(--success))]">
+                <Zap className="h-5 w-5" />
+                <span className="text-lg font-bold">{questions.length > 0 ? Math.round(Object.values(answerTimes).reduce((a, b) => a + b, 0) / questions.length) : 0}s</span>
+              </div>
+              <p className="text-xs text-muted-foreground">{language === 'en' ? 'Avg Speed' : 'Kelajuan Purata'}</p>
+            </div>
+          </div>
         </div>
 
         <div className="space-y-3">
@@ -315,7 +498,12 @@ const Quiz = () => {
           })}
         </div>
 
-        <div className="flex gap-3 mt-6">
+        <div className="flex flex-wrap gap-3 mt-6">
+          {wrongQuestions.length > 0 && (
+            <Button variant="outline" onClick={handleRetryWrong} className="rounded-full gap-2 h-11">
+              <RotateCcw className="h-4 w-4" /> {language === 'en' ? 'Retry Wrong Answers' : 'Cuba Semula Jawapan Salah'} ({wrongQuestions.length})
+            </Button>
+          )}
           <Button variant="outline" onClick={() => { setStep('configure'); setQuestions([]); }} className="rounded-full gap-2 h-11">
             <RotateCcw className="h-4 w-4" /> {t('retake')}
           </Button>
