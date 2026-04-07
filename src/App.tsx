@@ -13,6 +13,8 @@ import Chat from "./pages/Chat";
 import Quiz from "./pages/Quiz";
 import QuizHistory from "./pages/QuizHistory";
 import Settings from "./pages/Settings";
+import Flashcards from "./pages/Flashcards";
+import Summary from "./pages/Summary";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -64,6 +66,8 @@ const App = () => (
               <Route path="/quiz" element={<ProtectedRoute><Quiz /></ProtectedRoute>} />
               <Route path="/history" element={<ProtectedRoute><QuizHistory /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+              <Route path="/flashcards" element={<ProtectedRoute><Flashcards /></ProtectedRoute>} />
+              <Route path="/summary" element={<ProtectedRoute><Summary /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

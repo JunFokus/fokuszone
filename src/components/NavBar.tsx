@@ -2,7 +2,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Home, MessageCircle, Brain, History, Settings, LogOut, Menu, X } from 'lucide-react';
+import { Home, MessageCircle, Brain, History, Settings, LogOut, Menu, X, Zap, FileText } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 import logo from '@/assets/logo.png';
 import { useState } from 'react';
@@ -17,6 +17,8 @@ const NavBar = () => {
     { path: '/', icon: Home, label: t('dashboard') },
     { path: '/chat', icon: MessageCircle, label: t('chat') },
     { path: '/quiz', icon: Brain, label: t('quiz') },
+    { path: '/flashcards', icon: Zap, label: language === 'en' ? 'Cards' : 'Kad' },
+    { path: '/summary', icon: FileText, label: language === 'en' ? 'Summary' : 'Ringkasan' },
     { path: '/history', icon: History, label: t('history') },
     { path: '/settings', icon: Settings, label: language === 'en' ? 'Settings' : 'Tetapan' },
   ];
@@ -108,7 +110,7 @@ const NavBar = () => {
       {/* Mobile Bottom Tab Bar */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 glass border-t border-border/50 safe-area-bottom">
         <div className="flex items-center justify-around h-16">
-          {links.slice(0, 4).map(({ path, icon: Icon, label }) => (
+          {links.slice(0, 5).map(({ path, icon: Icon, label }) => (
             <Link
               key={path}
               to={path}
