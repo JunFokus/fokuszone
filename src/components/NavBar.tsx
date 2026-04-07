@@ -2,7 +2,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Home, MessageCircle, Brain, History, Settings, LogOut, Menu, X } from 'lucide-react';
+import { Home, MessageCircle, Brain, History, Settings, LogOut, Menu, X, Zap, FileText } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 import logo from '@/assets/logo.png';
 import { useState } from 'react';
