@@ -17,6 +17,8 @@ const NavBar = () => {
     { path: '/', icon: Home, label: t('dashboard') },
     { path: '/chat', icon: MessageCircle, label: t('chat') },
     { path: '/quiz', icon: Brain, label: t('quiz') },
+    { path: '/flashcards', icon: Zap, label: language === 'en' ? 'Cards' : 'Kad' },
+    { path: '/summary', icon: FileText, label: language === 'en' ? 'Summary' : 'Ringkasan' },
     { path: '/history', icon: History, label: t('history') },
     { path: '/settings', icon: Settings, label: language === 'en' ? 'Settings' : 'Tetapan' },
   ];
