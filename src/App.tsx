@@ -13,6 +13,8 @@ import Chat from "./pages/Chat";
 import Quiz from "./pages/Quiz";
 import QuizHistory from "./pages/QuizHistory";
 import Settings from "./pages/Settings";
+import Flashcards from "./pages/Flashcards";
+import Summary from "./pages/Summary";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
