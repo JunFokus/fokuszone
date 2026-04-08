@@ -206,13 +206,22 @@ const Quiz = () => {
     }, []);
     setWrongQuestions(wrong);
 
+    // Submit to server-side grading edge function (scores computed server-side)
     if (user) {
-      await supabase.from('quiz_results').insert({
-        user_id: user.id, subject: subject || prompt || 'General', form_level: parseInt(formLevel),
-        difficulty, question_type: questionType, total_questions: questions.length,
-        correct_answers: correctCount, score_percentage: percentage,
-        quiz_data: questions.map((q, i) => ({ ...q, user_answer: answers[i] || '' })),
-      });
+      try {
+        await supabase.functions.invoke('submit-quiz', {
+          body: {
+            questions,
+            answers,
+            subject: subject || prompt || 'General',
+            formLevel: parseInt(formLevel),
+            difficulty,
+            questionType,
+          },
+        });
+      } catch (err) {
+        console.error('Failed to submit quiz:', err);
+      }
     }
 
     setStep('results');
