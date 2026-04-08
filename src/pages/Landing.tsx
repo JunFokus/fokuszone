@@ -69,8 +69,8 @@ const Landing = () => {
               {language === 'en' ? 'AI-Powered Learning Platform' : 'Platform Pembelajaran Dikuasakan AI'}
             </div>
 
-            <h1 className="text-5xl lg:text-7xl font-black tracking-tight leading-[1.1]">
-              <span className="text-gradient text-8xl">FokusZone</span>
+            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-black tracking-tight leading-[1.1]">
+              <span className="text-gradient text-5xl sm:text-6xl lg:text-8xl">FokusZone</span>
             </h1>
 
             <p className="text-lg lg:text-xl text-muted-foreground leading-relaxed max-w-lg">
