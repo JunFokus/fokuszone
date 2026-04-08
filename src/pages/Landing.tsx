@@ -60,20 +60,20 @@ const Landing = () => {
       </nav>
 
       {/* Hero */}
-      <section className="container mx-auto px-4 py-20 lg:py-28">
+      <section className="container mx-auto px-4 py-12 sm:py-20 lg:py-28">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* Left */}
           <div className="space-y-8 animate-fade-in">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary font-medium text-lg">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary font-medium text-sm sm:text-lg">
               <Sparkles className="h-4 w-4" />
               {language === 'en' ? 'AI-Powered Learning Platform' : 'Platform Pembelajaran Dikuasakan AI'}
             </div>
 
-            <h1 className="text-5xl lg:text-7xl font-black tracking-tight leading-[1.1]">
-              <span className="text-gradient text-8xl">FokusZone</span>
+            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-black tracking-tight leading-[1.1]">
+              <span className="text-gradient text-5xl sm:text-6xl lg:text-8xl">FokusZone</span>
             </h1>
 
-            <p className="text-lg lg:text-xl text-muted-foreground leading-relaxed max-w-lg">
+            <p className="text-base sm:text-lg lg:text-xl text-muted-foreground leading-relaxed max-w-lg">
               {language === 'en'
                 ? 'Study smarter with AI-powered notes, flashcards, quizzes, mock exams, focus tools, and an intelligent AI mentor — all in one place.'
                 : 'Belajar dengan lebih bijak menggunakan nota, kad imbas, kuiz, peperiksaan percubaan, alat fokus berkuasa AI, dan mentor AI pintar — semua di satu tempat.'}
