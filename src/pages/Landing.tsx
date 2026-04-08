@@ -64,7 +64,7 @@ const Landing = () => {
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* Left */}
           <div className="space-y-8 animate-fade-in">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary font-medium text-lg">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary font-medium text-sm sm:text-lg">
               <Sparkles className="h-4 w-4" />
               {language === 'en' ? 'AI-Powered Learning Platform' : 'Platform Pembelajaran Dikuasakan AI'}
             </div>
