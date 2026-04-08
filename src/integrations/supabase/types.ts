@@ -118,7 +118,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      update_profile_safe: {
+        Args: { p_display_name?: string; p_preferred_language?: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
