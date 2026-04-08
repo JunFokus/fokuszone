@@ -88,7 +88,7 @@ const Index = () => {
       {/* Welcome */}
       <div className="space-y-1 animate-fade-in">
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">
-          {language === 'en' ? 'Welcome' : 'Selamat Datang'}, <span className="text-gradient">{displayName}</span>
+          {language === 'en' ? 'Welcome' : 'Selamat Datang'}, <span className="text-gradient text-4xl">{displayName}</span>
         </h1>
         <p className="text-muted-foreground">{formLabel} · {language === 'en' ? 'Keep up the great work!' : 'Teruskan usaha yang baik!'}</p>
       </div>
