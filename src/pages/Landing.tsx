@@ -60,7 +60,7 @@ const Landing = () => {
       </nav>
 
       {/* Hero */}
-      <section className="container mx-auto px-4 py-20 lg:py-28">
+      <section className="container mx-auto px-4 py-12 sm:py-20 lg:py-28">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* Left */}
           <div className="space-y-8 animate-fade-in">
