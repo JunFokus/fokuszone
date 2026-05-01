@@ -112,6 +112,28 @@ const Notes = () => {
 
   const removeImage = (idx: number) => setImages((prev) => prev.filter((_, i) => i !== idx));
 
+  const loadHistory = useCallback(async () => {
+    if (!user) return;
+    setLoadingHistory(true);
+    const { data, error } = await supabase
+      .from('notes_history')
+      .select('id, title, summary, key_points, flashcards, quiz, source_text, created_at')
+      .order('created_at', { ascending: false })
+      .limit(50);
+    if (!error && data) {
+      setHistory(data as unknown as HistoryEntry[]);
+    }
+    setLoadingHistory(false);
+  }, [user]);
+
+  useEffect(() => { loadHistory(); }, [loadHistory]);
+
+  const deriveTitle = (src: string, summary: string): string => {
+    const base = (src || summary || '').replace(/\s+/g, ' ').trim();
+    if (!base) return language === 'en' ? 'Untitled notes' : 'Nota tanpa tajuk';
+    return base.slice(0, 60) + (base.length > 60 ? '…' : '');
+  };
+
   const handleProcess = async () => {
     if (!user) return;
     if (!text.trim() && images.length === 0) {
@@ -132,13 +154,55 @@ const Notes = () => {
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      setResult(data as ProcessedNotes);
-      toast({ title: t('Notes processed!', 'Nota diproses!') });
+      const processed = data as ProcessedNotes;
+      setResult(processed);
+
+      // Persist to history (best-effort)
+      const title = deriveTitle(text, processed.summary || '');
+      const { error: insertErr } = await supabase.from('notes_history').insert({
+        user_id: user.id,
+        title,
+        source_text: text.trim() || null,
+        summary: processed.summary || '',
+        key_points: processed.keyPoints || [],
+        flashcards: processed.flashcards || [],
+        quiz: processed.quiz || [],
+      });
+      if (insertErr) console.error('Save history error:', insertErr);
+      else loadHistory();
+
+      toast({ title: t('Notes processed & saved!', 'Nota diproses & disimpan!') });
     } catch (err: any) {
       console.error(err);
       toast({ title: err?.message || t('Failed to process notes', 'Gagal memproses nota'), variant: 'destructive' });
     } finally {
       setProcessing(false);
+    }
+  };
+
+  const openFromHistory = (entry: HistoryEntry) => {
+    setResult({
+      summary: entry.summary,
+      keyPoints: entry.key_points || [],
+      flashcards: entry.flashcards || [],
+      quiz: entry.quiz || [],
+    });
+    setFlipped({});
+    setRevealed({});
+    setText(entry.source_text || '');
+    setImages([]);
+    setPdfFiles([]);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const deleteHistory = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const prev = history;
+    setHistory((h) => h.filter((x) => x.id !== id));
+    const { error } = await supabase.from('notes_history').delete().eq('id', id);
+    if (error) {
+      setHistory(prev);
+      toast({ title: t('Failed to delete', 'Gagal memadam'), variant: 'destructive' });
     }
   };
 
