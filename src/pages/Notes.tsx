@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Upload, Sparkles, FileText, X, Image as ImageIcon, FileType, Notebook, Lightbulb, Brain, Zap } from 'lucide-react';
+import { Loader2, Upload, Sparkles, FileText, X, Image as ImageIcon, FileType, Notebook, Lightbulb, Brain, Zap, History as HistoryIcon, Trash2, Clock } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 interface Flashcard { front: string; back: string; difficulty: string; }
@@ -18,6 +18,16 @@ interface ProcessedNotes {
   flashcards: Flashcard[];
   quiz: QuizQuestion[];
 }
+interface HistoryEntry {
+  id: string;
+  title: string;
+  summary: string;
+  key_points: string[];
+  flashcards: Flashcard[];
+  quiz: QuizQuestion[];
+  source_text: string | null;
+  created_at: string;
+}
 
 const MAX_IMAGES = 4;
 const MAX_FILE_MB = 10;
@@ -27,6 +37,9 @@ const Notes = () => {
   const { language } = useLanguage();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
   const [text, setText] = useState('');
   const [images, setImages] = useState<{ name: string; dataUrl: string }[]>([]);
@@ -99,6 +112,28 @@ const Notes = () => {
 
   const removeImage = (idx: number) => setImages((prev) => prev.filter((_, i) => i !== idx));
 
+  const loadHistory = useCallback(async () => {
+    if (!user) return;
+    setLoadingHistory(true);
+    const { data, error } = await supabase
+      .from('notes_history')
+      .select('id, title, summary, key_points, flashcards, quiz, source_text, created_at')
+      .order('created_at', { ascending: false })
+      .limit(50);
+    if (!error && data) {
+      setHistory(data as unknown as HistoryEntry[]);
+    }
+    setLoadingHistory(false);
+  }, [user]);
+
+  useEffect(() => { loadHistory(); }, [loadHistory]);
+
+  const deriveTitle = (src: string, summary: string): string => {
+    const base = (src || summary || '').replace(/\s+/g, ' ').trim();
+    if (!base) return language === 'en' ? 'Untitled notes' : 'Nota tanpa tajuk';
+    return base.slice(0, 60) + (base.length > 60 ? '…' : '');
+  };
+
   const handleProcess = async () => {
     if (!user) return;
     if (!text.trim() && images.length === 0) {
@@ -119,13 +154,55 @@ const Notes = () => {
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      setResult(data as ProcessedNotes);
-      toast({ title: t('Notes processed!', 'Nota diproses!') });
+      const processed = data as ProcessedNotes;
+      setResult(processed);
+
+      // Persist to history (best-effort)
+      const title = deriveTitle(text, processed.summary || '');
+      const { error: insertErr } = await supabase.from('notes_history').insert([{
+        user_id: user.id,
+        title,
+        source_text: text.trim() || null,
+        summary: processed.summary || '',
+        key_points: (processed.keyPoints || []) as any,
+        flashcards: (processed.flashcards || []) as any,
+        quiz: (processed.quiz || []) as any,
+      }]);
+      if (insertErr) console.error('Save history error:', insertErr);
+      else loadHistory();
+
+      toast({ title: t('Notes processed & saved!', 'Nota diproses & disimpan!') });
     } catch (err: any) {
       console.error(err);
       toast({ title: err?.message || t('Failed to process notes', 'Gagal memproses nota'), variant: 'destructive' });
     } finally {
       setProcessing(false);
+    }
+  };
+
+  const openFromHistory = (entry: HistoryEntry) => {
+    setResult({
+      summary: entry.summary,
+      keyPoints: entry.key_points || [],
+      flashcards: entry.flashcards || [],
+      quiz: entry.quiz || [],
+    });
+    setFlipped({});
+    setRevealed({});
+    setText(entry.source_text || '');
+    setImages([]);
+    setPdfFiles([]);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const deleteHistory = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const prev = history;
+    setHistory((h) => h.filter((x) => x.id !== id));
+    const { error } = await supabase.from('notes_history').delete().eq('id', id);
+    if (error) {
+      setHistory(prev);
+      toast({ title: t('Failed to delete', 'Gagal memadam'), variant: 'destructive' });
     }
   };
 
@@ -353,6 +430,71 @@ const Notes = () => {
           </Tabs>
         </div>
       )}
+
+      {/* History */}
+      <div className="mt-10">
+        <div className="flex items-center gap-2 mb-4">
+          <HistoryIcon className="h-4 w-4 text-primary" />
+          <h2 className="font-semibold text-sm">
+            {t('Notes history', 'Sejarah nota')}
+          </h2>
+          {history.length > 0 && (
+            <span className="text-xs text-muted-foreground">({history.length})</span>
+          )}
+        </div>
+
+        {loadingHistory ? (
+          <div className="glass rounded-2xl p-6 flex items-center justify-center">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          </div>
+        ) : history.length === 0 ? (
+          <div className="glass rounded-2xl p-8 text-center">
+            <Clock className="h-7 w-7 mx-auto mb-2 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">
+              {t('Your processed notes will appear here.', 'Nota yang anda proses akan muncul di sini.')}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {history.map((entry) => (
+              <button
+                key={entry.id}
+                onClick={() => openFromHistory(entry)}
+                className="glass rounded-2xl p-4 text-left hover:shadow-[0_0_30px_-10px_hsl(var(--primary)/0.25)] transition-all group"
+              >
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <p className="font-semibold text-sm leading-snug line-clamp-2 flex-1">
+                    {entry.title}
+                  </p>
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    onClick={(e) => deleteHistory(entry.id, e)}
+                    className="shrink-0 h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                    aria-label={t('Delete', 'Padam')}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground line-clamp-2 mb-3">
+                  {entry.summary?.replace(/[#*`_>-]/g, '').slice(0, 140) || t('No summary', 'Tiada ringkasan')}
+                </p>
+                <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Zap className="h-3 w-3" /> {entry.flashcards?.length || 0}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Brain className="h-3 w-3" /> {entry.quiz?.length || 0}
+                  </span>
+                  <span className="ml-auto">
+                    {new Date(entry.created_at).toLocaleDateString(language === 'ms' ? 'ms-MY' : 'en-US', { month: 'short', day: 'numeric' })}
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
