@@ -15,6 +15,7 @@ import QuizHistory from "./pages/QuizHistory";
 import Settings from "./pages/Settings";
 import Flashcards from "./pages/Flashcards";
 import Summary from "./pages/Summary";
+import Notes from "./pages/Notes";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -68,6 +69,7 @@ const App = () => (
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/flashcards" element={<ProtectedRoute><Flashcards /></ProtectedRoute>} />
               <Route path="/summary" element={<ProtectedRoute><Summary /></ProtectedRoute>} />
+              <Route path="/notes" element={<ProtectedRoute><Notes /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
