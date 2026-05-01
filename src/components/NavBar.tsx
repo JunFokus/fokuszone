@@ -2,7 +2,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Home, MessageCircle, Brain, History, Settings, LogOut, Menu, X, Zap, FileText } from 'lucide-react';
+import { Home, MessageCircle, Brain, History, Settings, LogOut, Menu, X, Zap, FileText, Notebook } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 import logo from '@/assets/logo.png';
 import { useState } from 'react';
@@ -17,6 +17,7 @@ const NavBar = () => {
     { path: '/', icon: Home, label: t('dashboard') },
     { path: '/chat', icon: MessageCircle, label: t('chat') },
     { path: '/quiz', icon: Brain, label: t('quiz') },
+    { path: '/notes', icon: Notebook, label: language === 'en' ? 'Notes' : 'Nota' },
     { path: '/flashcards', icon: Zap, label: language === 'en' ? 'Cards' : 'Kad' },
     { path: '/summary', icon: FileText, label: language === 'en' ? 'Summary' : 'Ringkasan' },
     { path: '/history', icon: History, label: t('history') },
