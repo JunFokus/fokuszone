@@ -41,6 +41,42 @@ export type Database = {
         }
         Relationships: []
       }
+      notes_history: {
+        Row: {
+          created_at: string
+          flashcards: Json
+          id: string
+          key_points: Json
+          quiz: Json
+          source_text: string | null
+          summary: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          flashcards?: Json
+          id?: string
+          key_points?: Json
+          quiz?: Json
+          source_text?: string | null
+          summary?: string
+          title?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          flashcards?: Json
+          id?: string
+          key_points?: Json
+          quiz?: Json
+          source_text?: string | null
+          summary?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
