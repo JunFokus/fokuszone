@@ -430,6 +430,71 @@ const Notes = () => {
           </Tabs>
         </div>
       )}
+
+      {/* History */}
+      <div className="mt-10">
+        <div className="flex items-center gap-2 mb-4">
+          <HistoryIcon className="h-4 w-4 text-primary" />
+          <h2 className="font-semibold text-sm">
+            {t('Notes history', 'Sejarah nota')}
+          </h2>
+          {history.length > 0 && (
+            <span className="text-xs text-muted-foreground">({history.length})</span>
+          )}
+        </div>
+
+        {loadingHistory ? (
+          <div className="glass rounded-2xl p-6 flex items-center justify-center">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          </div>
+        ) : history.length === 0 ? (
+          <div className="glass rounded-2xl p-8 text-center">
+            <Clock className="h-7 w-7 mx-auto mb-2 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">
+              {t('Your processed notes will appear here.', 'Nota yang anda proses akan muncul di sini.')}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {history.map((entry) => (
+              <button
+                key={entry.id}
+                onClick={() => openFromHistory(entry)}
+                className="glass rounded-2xl p-4 text-left hover:shadow-[0_0_30px_-10px_hsl(var(--primary)/0.25)] transition-all group"
+              >
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <p className="font-semibold text-sm leading-snug line-clamp-2 flex-1">
+                    {entry.title}
+                  </p>
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    onClick={(e) => deleteHistory(entry.id, e)}
+                    className="shrink-0 h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                    aria-label={t('Delete', 'Padam')}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground line-clamp-2 mb-3">
+                  {entry.summary?.replace(/[#*`_>-]/g, '').slice(0, 140) || t('No summary', 'Tiada ringkasan')}
+                </p>
+                <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Zap className="h-3 w-3" /> {entry.flashcards?.length || 0}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Brain className="h-3 w-3" /> {entry.quiz?.length || 0}
+                  </span>
+                  <span className="ml-auto">
+                    {new Date(entry.created_at).toLocaleDateString(language === 'ms' ? 'ms-MY' : 'en-US', { month: 'short', day: 'numeric' })}
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
