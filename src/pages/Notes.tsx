@@ -164,9 +164,9 @@ const Notes = () => {
         title,
         source_text: text.trim() || null,
         summary: processed.summary || '',
-        key_points: processed.keyPoints || [],
-        flashcards: processed.flashcards || [],
-        quiz: processed.quiz || [],
+        key_points: (processed.keyPoints || []) as any,
+        flashcards: (processed.flashcards || []) as any,
+        quiz: (processed.quiz || []) as any,
       }]);
       if (insertErr) console.error('Save history error:', insertErr);
       else loadHistory();
