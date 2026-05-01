@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Upload, Sparkles, FileText, X, Image as ImageIcon, FileType, Notebook, Lightbulb, Brain, Zap } from 'lucide-react';
+import { Loader2, Upload, Sparkles, FileText, X, Image as ImageIcon, FileType, Notebook, Lightbulb, Brain, Zap, History as HistoryIcon, Trash2, Clock } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 interface Flashcard { front: string; back: string; difficulty: string; }
@@ -18,6 +18,16 @@ interface ProcessedNotes {
   flashcards: Flashcard[];
   quiz: QuizQuestion[];
 }
+interface HistoryEntry {
+  id: string;
+  title: string;
+  summary: string;
+  key_points: string[];
+  flashcards: Flashcard[];
+  quiz: QuizQuestion[];
+  source_text: string | null;
+  created_at: string;
+}
 
 const MAX_IMAGES = 4;
 const MAX_FILE_MB = 10;
@@ -27,6 +37,9 @@ const Notes = () => {
   const { language } = useLanguage();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
   const [text, setText] = useState('');
   const [images, setImages] = useState<{ name: string; dataUrl: string }[]>([]);
