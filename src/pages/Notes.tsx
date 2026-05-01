@@ -159,7 +159,7 @@ const Notes = () => {
 
       // Persist to history (best-effort)
       const title = deriveTitle(text, processed.summary || '');
-      const { error: insertErr } = await supabase.from('notes_history').insert({
+      const { error: insertErr } = await supabase.from('notes_history').insert([{
         user_id: user.id,
         title,
         source_text: text.trim() || null,
@@ -167,7 +167,7 @@ const Notes = () => {
         key_points: processed.keyPoints || [],
         flashcards: processed.flashcards || [],
         quiz: processed.quiz || [],
-      });
+      }]);
       if (insertErr) console.error('Save history error:', insertErr);
       else loadHistory();
 
