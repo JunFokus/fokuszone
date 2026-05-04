@@ -6,7 +6,7 @@ const translations = {
   en: {
     welcome: 'Welcome back',
     dashboard: 'Dashboard',
-    chat: 'Quiz',
+    chat: 'Chat',
     quiz: 'Take a Quiz',
     history: 'Quiz History',
     logout: 'Log Out',
@@ -80,7 +80,7 @@ const translations = {
   ms: {
     welcome: 'Selamat kembali',
     dashboard: 'Papan Pemuka',
-    chat: 'Kuiz',
+    chat: 'Chat',
     quiz: 'Ambil Kuiz',
     history: 'Sejarah Kuiz',
     logout: 'Log Keluar',
