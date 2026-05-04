@@ -73,7 +73,7 @@ const Landing = () => {
               <span className="text-gradient text-5xl sm:text-6xl lg:text-8xl">FokusZone</span>
             </h1>
 
-            <p className="text-base sm:text-lg lg:text-xl text-muted-foreground leading-relaxed max-w-lg">
+            <p className="text-base sm:text-lg lg:text-xl text-muted-foreground leading-relaxed max-w-full lg:max-w-lg">
               {language === 'en'
                 ? 'Study smarter with AI-powered notes, flashcards, quizzes, mock exams, focus tools, and an intelligent AI mentor — all in one place.'
                 : 'Belajar dengan lebih bijak menggunakan nota, kad imbas, kuiz, peperiksaan percubaan, alat fokus berkuasa AI, dan mentor AI pintar — semua di satu tempat.'}
@@ -96,7 +96,7 @@ const Landing = () => {
 
           {/* Right - Preview Card */}
           <div className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
-            <div className="glass rounded-2xl p-6 glow-border">
+            <div className="glass rounded-2xl p-3 sm:p-6 glow-border">
               {/* Tabs */}
               <div className="flex gap-1 mb-6 overflow-x-auto pb-1">
                 {previewTabs.map((tab) => (

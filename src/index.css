@@ -103,6 +103,11 @@
     @apply border-border;
   }
 
+  html, body {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
   body {
     @apply bg-background text-foreground;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -110,24 +115,8 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  h1 {
-    font-size: clamp(1.75rem, 4vw, 3rem);
-    line-height: 1.15;
-  }
-
-  h2 {
-    font-size: clamp(1.25rem, 3vw, 2rem);
-    line-height: 1.2;
-  }
-
-  h3 {
-    font-size: clamp(1rem, 2vw, 1.25rem);
-    line-height: 1.3;
-  }
-
-  p, li, span, label, input, textarea, select, button {
-    font-size: clamp(0.875rem, 1.5vw, 1rem);
-  }
+  /* Headings & body text are sized via Tailwind utilities at the component level
+     to avoid overriding text-* classes. */
 }
 
 @layer utilities {
