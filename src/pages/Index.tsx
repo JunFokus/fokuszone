@@ -170,7 +170,7 @@ const Index = () => {
             <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform mx-auto mb-2">
               <MessageCircle className="h-5 w-5 text-primary" />
             </div>
-            <h3 className="font-semibold text-sm">{language === 'en' ? 'Quiz' : 'Kuiz'}</h3>
+            <h3 className="font-semibold text-sm">{language === 'en' ? 'Chat' : 'Chat'}</h3>
             <p className="text-[11px] text-muted-foreground mt-0.5">{language === 'en' ? 'Ask anything' : 'Tanya apa sahaja'}</p>
           </div>
         </Link>
