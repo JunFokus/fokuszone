@@ -96,7 +96,7 @@ const Landing = () => {
 
           {/* Right - Preview Card */}
           <div className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
-            <div className="glass rounded-2xl p-6 glow-border">
+            <div className="glass rounded-2xl p-3 sm:p-6 glow-border">
               {/* Tabs */}
               <div className="flex gap-1 mb-6 overflow-x-auto pb-1">
                 {previewTabs.map((tab) => (
