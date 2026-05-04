@@ -115,23 +115,8 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  h1 {
-    font-size: clamp(1.75rem, 4vw, 3rem);
-    line-height: 1.15;
-  }
-
-  h2 {
-    font-size: clamp(1.25rem, 3vw, 2rem);
-    line-height: 1.2;
-  }
-
-  h3 {
-    font-size: clamp(1rem, 2vw, 1.25rem);
-    line-height: 1.3;
-  }
-
-  /* Note: Removed global font-size clamp on p/span/label/input/etc.
-     It was overriding Tailwind text-* utilities. Use Tailwind classes for sizing instead. */
+  /* Headings & body text are sized via Tailwind utilities at the component level
+     to avoid overriding text-* classes. */
 }
 
 @layer utilities {
