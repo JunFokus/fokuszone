@@ -18,7 +18,7 @@ interface Flashcard {
 const SUBJECTS = [
   'Mathematics', 'Science', 'Bahasa Melayu', 'English', 'Sejarah',
   'Geography', 'Additional Mathematics', 'Physics', 'Chemistry', 'Biology',
-  'ASAS', 'Sains Komputer',
+  'Sains Komputer',
 ];
 
 const Flashcards = () => {
