@@ -16,6 +16,7 @@ import Settings from "./pages/Settings";
 import Flashcards from "./pages/Flashcards";
 import Summary from "./pages/Summary";
 import Notes from "./pages/Notes";
+import AdminSubjects from "./pages/AdminSubjects";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -70,6 +71,7 @@ const App = () => (
               <Route path="/flashcards" element={<ProtectedRoute><Flashcards /></ProtectedRoute>} />
               <Route path="/summary" element={<ProtectedRoute><Summary /></ProtectedRoute>} />
               <Route path="/notes" element={<ProtectedRoute><Notes /></ProtectedRoute>} />
+              <Route path="/admin/subjects" element={<ProtectedRoute><AdminSubjects /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

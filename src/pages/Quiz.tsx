@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Loader2, CheckCircle2, XCircle, ArrowRight, RotateCcw, Brain, Timer, Zap, Flame, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Confetti from 'react-confetti';
+import { useSubjects } from '@/hooks/useSubjects';
 
 interface QuizQuestion {
   question: string;
@@ -22,20 +23,6 @@ interface QuizQuestion {
 
 type Step = 'configure' | 'quiz' | 'results';
 
-const SUBJECTS = [
-  { key: 'mathSubject', value: 'Mathematics' },
-  { key: 'scienceSubject', value: 'Science' },
-  { key: 'bmSubject', value: 'Bahasa Melayu' },
-  { key: 'englishSubject', value: 'English' },
-  { key: 'sejarahSubject', value: 'Sejarah' },
-  { key: 'geoSubject', value: 'Geography' },
-  { key: 'addMathSubject', value: 'Additional Mathematics' },
-  { key: 'physicsSubject', value: 'Physics' },
-  { key: 'chemistrySubject', value: 'Chemistry' },
-  { key: 'biologySubject', value: 'Biology' },
-  { value: 'ASAS', key: 'asasSubject' },
-  { value: 'Sains Komputer', key: 'sainsKomputerSubject' },
-];
 
 const QUESTION_TIMER = 30; // seconds per question
 const XP_BASE = 10;
@@ -45,6 +32,7 @@ const XP_STREAK_MULTIPLIER = 2;
 const Quiz = () => {
   const { user, profile } = useAuth();
   const { t, language } = useLanguage();
+  const { subjects } = useSubjects();
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>('configure');
 
@@ -277,7 +265,7 @@ const Quiz = () => {
               <Select value={subject} onValueChange={setSubject}>
                 <SelectTrigger className="rounded-xl bg-muted/50 h-11"><SelectValue placeholder={t('selectSubject')} /></SelectTrigger>
                 <SelectContent>
-                  {SUBJECTS.map(s => <SelectItem key={s.value} value={s.value}>{s.value}</SelectItem>)}
+                  {subjects.map(s => <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
