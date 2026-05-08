@@ -40,7 +40,7 @@ const NavBar = () => {
           </Link>
 
           {/* Desktop Links */}
-          <div className="hidden md:flex items-center gap-1">
+          <div className="hidden lg:flex items-center gap-1">
             {links.map(({ path, icon: Icon, label }) => (
               <Link key={path} to={path}>
                 <Button
@@ -86,7 +86,7 @@ const NavBar = () => {
               variant="ghost"
               size="icon"
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="md:hidden rounded-full h-9 w-9"
+              className="lg:hidden rounded-full h-9 w-9"
             >
               {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
@@ -95,7 +95,7 @@ const NavBar = () => {
 
         {/* Mobile Menu */}
         {mobileOpen && (
-          <div className="md:hidden border-t border-border/50 p-3 space-y-1 animate-fade-in">
+          <div className="lg:hidden border-t border-border/50 p-3 space-y-1 animate-fade-in">
             {links.map(({ path, icon: Icon, label }) => (
               <Link key={path} to={path} onClick={() => setMobileOpen(false)}>
                 <Button
@@ -112,7 +112,7 @@ const NavBar = () => {
       </nav>
 
       {/* Mobile Bottom Tab Bar */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 glass border-t border-border/50 safe-area-bottom">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 glass border-t border-border/50 safe-area-bottom">
         <div className="flex items-center justify-around h-16">
           {links.slice(0, 5).map(({ path, icon: Icon, label }) => (
             <Link
