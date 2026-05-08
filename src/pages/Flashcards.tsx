@@ -8,6 +8,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Zap, RotateCcw, ChevronLeft, ChevronRight, Sparkles, BookOpen } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { useSubjects } from '@/hooks/useSubjects';
 
 interface Flashcard {
   front: string;
@@ -15,15 +16,10 @@ interface Flashcard {
   difficulty: string;
 }
 
-const SUBJECTS = [
-  'Mathematics', 'Science', 'Bahasa Melayu', 'English', 'Sejarah',
-  'Geography', 'Additional Mathematics', 'Physics', 'Chemistry', 'Biology',
-  'Sains Komputer',
-];
-
 const Flashcards = () => {
   const { user, profile } = useAuth();
   const { language } = useLanguage();
+  const { subjects } = useSubjects();
 
   const [notes, setNotes] = useState('');
   const [subject, setSubject] = useState('');
