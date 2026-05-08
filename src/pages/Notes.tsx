@@ -211,7 +211,7 @@ const Notes = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-5xl pb-24 md:pb-8">
+    <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-5xl pb-24 lg:pb-8">
       <div className="flex items-center gap-3 mb-6 sm:mb-8">
         <div className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
           <Notebook className="h-5 w-5 text-primary" />

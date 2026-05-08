@@ -77,7 +77,7 @@ const Flashcards = () => {
   // Generate mode
   if (cards.length === 0) {
     return (
-      <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-2xl pb-24 md:pb-8">
+      <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-2xl pb-24 lg:pb-8">
         <div className="flex items-center gap-3 mb-6 sm:mb-8">
           <div className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
             <Zap className="h-5 w-5 text-primary" />
@@ -167,7 +167,7 @@ const Flashcards = () => {
   const diffColor = card.difficulty === 'hard' ? 'text-destructive' : card.difficulty === 'medium' ? 'text-orange-500' : 'text-[hsl(var(--success))]';
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-2xl pb-24 md:pb-8">
+    <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-2xl pb-24 lg:pb-8">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
