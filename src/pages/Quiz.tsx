@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Loader2, CheckCircle2, XCircle, ArrowRight, RotateCcw, Brain, Timer, Zap, Flame, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Confetti from 'react-confetti';
+import { useSubjects } from '@/hooks/useSubjects';
 
 interface QuizQuestion {
   question: string;
@@ -22,20 +23,6 @@ interface QuizQuestion {
 
 type Step = 'configure' | 'quiz' | 'results';
 
-const SUBJECTS = [
-  { key: 'mathSubject', value: 'Mathematics' },
-  { key: 'scienceSubject', value: 'Science' },
-  { key: 'bmSubject', value: 'Bahasa Melayu' },
-  { key: 'englishSubject', value: 'English' },
-  { key: 'sejarahSubject', value: 'Sejarah' },
-  { key: 'geoSubject', value: 'Geography' },
-  { key: 'addMathSubject', value: 'Additional Mathematics' },
-  { key: 'physicsSubject', value: 'Physics' },
-  { key: 'chemistrySubject', value: 'Chemistry' },
-  { key: 'biologySubject', value: 'Biology' },
-  { value: 'ASAS', key: 'asasSubject' },
-  { value: 'Sains Komputer', key: 'sainsKomputerSubject' },
-];
 
 const QUESTION_TIMER = 30; // seconds per question
 const XP_BASE = 10;

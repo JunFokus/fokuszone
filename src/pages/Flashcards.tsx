@@ -106,7 +106,7 @@ const Flashcards = () => {
               <Select value={subject} onValueChange={setSubject}>
                 <SelectTrigger className="rounded-xl bg-muted/50 h-11"><SelectValue placeholder={language === 'en' ? 'Select subject' : 'Pilih mata pelajaran'} /></SelectTrigger>
                 <SelectContent>
-                  {SUBJECTS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                  {subjects.map(s => <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
