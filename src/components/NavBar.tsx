@@ -2,14 +2,16 @@ import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Home, MessageCircle, Brain, History, Settings, LogOut, Menu, X, Zap, FileText, Notebook } from 'lucide-react';
+import { Home, MessageCircle, Brain, History, Settings, LogOut, Menu, X, Zap, FileText, Notebook, ShieldCheck } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 import logo from '@/assets/logo.png';
 import { useState } from 'react';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 
 const NavBar = () => {
   const { signOut, profile } = useAuth();
   const { t, language, setLanguage } = useLanguage();
+  const { isAdmin } = useIsAdmin();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -22,6 +24,7 @@ const NavBar = () => {
     { path: '/summary', icon: FileText, label: language === 'en' ? 'Summary' : 'Ringkasan' },
     { path: '/history', icon: History, label: t('history') },
     { path: '/settings', icon: Settings, label: language === 'en' ? 'Settings' : 'Tetapan' },
+    ...(isAdmin ? [{ path: '/admin/subjects', icon: ShieldCheck, label: language === 'en' ? 'Admin' : 'Admin' }] : []),
   ];
 
   const isActive = (path: string) => location.pathname === path;
