@@ -32,6 +32,7 @@ const XP_STREAK_MULTIPLIER = 2;
 const Quiz = () => {
   const { user, profile } = useAuth();
   const { t, language } = useLanguage();
+  const { subjects } = useSubjects();
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>('configure');
 
@@ -264,7 +265,7 @@ const Quiz = () => {
               <Select value={subject} onValueChange={setSubject}>
                 <SelectTrigger className="rounded-xl bg-muted/50 h-11"><SelectValue placeholder={t('selectSubject')} /></SelectTrigger>
                 <SelectContent>
-                  {SUBJECTS.map(s => <SelectItem key={s.value} value={s.value}>{s.value}</SelectItem>)}
+                  {subjects.map(s => <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
