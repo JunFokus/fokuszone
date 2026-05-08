@@ -12,7 +12,7 @@ Let’s be honest: the Form 4 and 5 syllabus is a lot. Between thick Sejarah tex
 Stuck on a Biologi concept at midnight? Our AI Chat isn't just a bot; it’s trained to understand the Malaysian education context. Ask it anything, get a breakdown that makes sense, and move on with your night.
 
 ####  Stop Guessing, Start Growing
-The dashboard doesn't just show numbers; it shows you the truth. Our **AI Insights** flag exactly which subjects need your attention (like that 20% in Add Maths) so you stop wasting time on stuff you already know and start fixing your weak spots.
+The dashboard doesn't just show numbers; it shows you the truth. Our **AI Insights** flag exactly which subjects need your attention) so you stop wasting time on stuff you already know and start fixing your weak spots.
 
 ####  The "Zone" (Focus Timer)
 Study marathons lead to burnout. We’ve baked in a Pomodoro timer to help you work in smart, high-intensity bursts. Hit the timer, lock in, and earn your breaks. 
@@ -21,7 +21,7 @@ Study marathons lead to burnout. We’ve baked in a Pomodoro timer to help you w
 We stole a page from the GitHub playbook. Your **Study Activity Heatmap** tracks your consistency. The goal? Don’t break the streak. Watch your dashboard fill up as you turn those "Needs Improvement" tags into "Mastered."
 
 #### 🇲🇾 Built for Us
-Everything here—from the quizzes to the dual-language (BM/English) support—is tailored for the Malaysian student experience. 
+Everything here from the quizzes to the dual-language (BM/English) support—is tailored for the Malaysian student experience. 
 
 ---
 
